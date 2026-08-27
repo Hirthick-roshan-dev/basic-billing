@@ -173,6 +173,17 @@ class CartNotifier extends Notifier<CartState> {
     );
   }
 
+  void updateItemPrice(String productName, double newUnitPrice) {
+    final index = state.items.indexWhere((item) => item.productName == productName);
+    if (index >= 0) {
+      final updatedList = List<CartItemModel>.from(state.items);
+      updatedList[index] = updatedList[index].copyWith(
+        unitPrice: CurrencyUtils.round(newUnitPrice.clamp(0.0, double.infinity)),
+      );
+      state = state.copyWith(items: updatedList);
+    }
+  }
+
   void setCustomerName(String name) {
     state = state.copyWith(customerName: name);
   }

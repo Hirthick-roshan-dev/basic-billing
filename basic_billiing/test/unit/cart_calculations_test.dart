@@ -85,5 +85,18 @@ void main() {
       expect(state.payableTotal, 115.0);
       expect(state.isTotalEdited, isTrue);
     });
+
+    test('updates unit price for cart item and recalculates subtotal and total', () {
+      final item = CartItemModel(productName: 'Engine Oil', unitPrice: 200.0, quantity: 2);
+      expect(item.totalPrice, 400.0);
+
+      final updatedItem = item.copyWith(unitPrice: 180.0);
+      expect(updatedItem.unitPrice, 180.0);
+      expect(updatedItem.totalPrice, 360.0);
+
+      final state = CartState(items: [updatedItem]);
+      expect(state.subtotal, 360.0);
+      expect(state.payableTotal, 360.0);
+    });
   });
 }
