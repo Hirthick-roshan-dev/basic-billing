@@ -16,6 +16,8 @@ class CustomerSection extends ConsumerStatefulWidget {
 class _CustomerSectionState extends ConsumerState<CustomerSection> {
   late final TextEditingController _nameController;
   late final TextEditingController _phoneController;
+  late final TextEditingController _vehicleController;
+  late final TextEditingController _jobCardController;
 
   @override
   void initState() {
@@ -23,6 +25,8 @@ class _CustomerSectionState extends ConsumerState<CustomerSection> {
     final cart = ref.read(cartProvider);
     _nameController = TextEditingController(text: cart.customerName);
     _phoneController = TextEditingController(text: cart.customerPhone);
+    _vehicleController = TextEditingController(text: cart.vehicleNumber);
+    _jobCardController = TextEditingController(text: cart.jobCardNumber);
   }
 
   @override
@@ -35,12 +39,20 @@ class _CustomerSectionState extends ConsumerState<CustomerSection> {
     if (_phoneController.text != cart.customerPhone) {
       _phoneController.text = cart.customerPhone;
     }
+    if (_vehicleController.text != cart.vehicleNumber) {
+      _vehicleController.text = cart.vehicleNumber;
+    }
+    if (_jobCardController.text != cart.jobCardNumber) {
+      _jobCardController.text = cart.jobCardNumber;
+    }
   }
 
   @override
   void dispose() {
     _nameController.dispose();
     _phoneController.dispose();
+    _vehicleController.dispose();
+    _jobCardController.dispose();
     super.dispose();
   }
 
@@ -53,13 +65,19 @@ class _CustomerSectionState extends ConsumerState<CustomerSection> {
       if (previous?.customerPhone != next.customerPhone && _phoneController.text != next.customerPhone) {
         _phoneController.text = next.customerPhone;
       }
+      if (previous?.vehicleNumber != next.vehicleNumber && _vehicleController.text != next.vehicleNumber) {
+        _vehicleController.text = next.vehicleNumber;
+      }
+      if (previous?.jobCardNumber != next.jobCardNumber && _jobCardController.text != next.jobCardNumber) {
+        _jobCardController.text = next.jobCardNumber;
+      }
     });
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Customer Information',
+          'Customer & Vehicle Information',
           style: AppTextStyles.subsectionTitle,
         ),
         const SizedBox(height: 10),
@@ -68,7 +86,7 @@ class _CustomerSectionState extends ConsumerState<CustomerSection> {
             Expanded(
               child: AppTextField(
                 controller: _nameController,
-                label: 'Name (Optional)',
+                label: 'Customer Name (Optional)',
                 hintText: 'Customer name',
                 prefixIcon: const Icon(Icons.person_outline, size: 18),
                 onChanged: (val) {
@@ -90,6 +108,36 @@ class _CustomerSectionState extends ConsumerState<CustomerSection> {
                 validator: Validators.validatePhone,
                 onChanged: (val) {
                   ref.read(cartProvider.notifier).setCustomerPhone(val);
+                },
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 10),
+        Row(
+          children: [
+            Expanded(
+              child: AppTextField(
+                controller: _vehicleController,
+                label: 'Vehicle No. (Optional)',
+                hintText: 'e.g. TN 38 AB 1234',
+                prefixIcon: const Icon(Icons.directions_car_outlined, size: 18),
+                textCapitalization: TextCapitalization.characters,
+                onChanged: (val) {
+                  ref.read(cartProvider.notifier).setVehicleNumber(val);
+                },
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: AppTextField(
+                controller: _jobCardController,
+                label: 'Job Card No. (Optional)',
+                hintText: 'e.g. JC-1024',
+                prefixIcon: const Icon(Icons.assignment_outlined, size: 18),
+                textCapitalization: TextCapitalization.characters,
+                onChanged: (val) {
+                  ref.read(cartProvider.notifier).setJobCardNumber(val);
                 },
               ),
             ),

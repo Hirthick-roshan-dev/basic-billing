@@ -23,6 +23,8 @@ class DatabaseMigrations {
         ${DatabaseConstants.colBillInvoiceNumber} TEXT UNIQUE NOT NULL,
         ${DatabaseConstants.colBillCustomerName} TEXT,
         ${DatabaseConstants.colBillCustomerPhone} TEXT,
+        ${DatabaseConstants.colBillVehicleNumber} TEXT,
+        ${DatabaseConstants.colBillJobCardNumber} TEXT,
         ${DatabaseConstants.colBillSubtotal} REAL NOT NULL,
         ${DatabaseConstants.colBillDiscountPercent} REAL DEFAULT 0,
         ${DatabaseConstants.colBillDiscountAmount} REAL DEFAULT 0,
@@ -100,6 +102,20 @@ class DatabaseMigrations {
         where: '${DatabaseConstants.colSettingsId} = ?',
         whereArgs: [1],
       );
+    }
+
+    if (oldVersion < 3) {
+      // Add vehicle_number and job_card_no columns to bills table (nullable so existing data is safe)
+      try {
+        await db.execute(
+          'ALTER TABLE ${DatabaseConstants.tableBills} ADD COLUMN ${DatabaseConstants.colBillVehicleNumber} TEXT',
+        );
+      } catch (_) {}
+      try {
+        await db.execute(
+          'ALTER TABLE ${DatabaseConstants.tableBills} ADD COLUMN ${DatabaseConstants.colBillJobCardNumber} TEXT',
+        );
+      } catch (_) {}
     }
   }
 }

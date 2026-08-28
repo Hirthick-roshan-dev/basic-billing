@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
+import 'package:basic_billiing/core/database/database_constants.dart';
 import 'package:basic_billiing/core/database/database_migrations.dart';
 import 'package:basic_billiing/features/billing/model/bill_model.dart';
 import 'package:basic_billiing/features/billing/model/bill_item_model.dart';
@@ -24,8 +25,9 @@ void main() {
     db = await databaseFactory.openDatabase(
       inMemoryDatabasePath,
       options: OpenDatabaseOptions(
-        version: 1,
+        version: DatabaseConstants.databaseVersion,
         onCreate: DatabaseMigrations.onCreate,
+        onUpgrade: DatabaseMigrations.onUpgrade,
       ),
     );
 
@@ -78,6 +80,8 @@ void main() {
         invoiceNumber: invNumber,
         customerName: 'John Doe',
         customerPhone: '9876543210',
+        vehicleNumber: 'TN 38 AB 1234',
+        jobCardNumber: 'JC-1024',
         subtotal: 100.0,
         discountPercent: 10.0,
         discountAmount: 10.0,
@@ -100,6 +104,8 @@ void main() {
       expect(saved.id, isNotNull);
       expect(saved.items.length, 1);
       expect(saved.items.first.productName, 'Widget A');
+      expect(saved.vehicleNumber, 'TN 38 AB 1234');
+      expect(saved.jobCardNumber, 'JC-1024');
 
       // Verify sequence increments for next bill on same date
       final nextInvNumber = await billingRepo.generateNextInvoiceNumber(now);
@@ -109,6 +115,8 @@ void main() {
       final retrieved = await billingRepo.getBillWithItems(saved.id!);
       expect(retrieved, isNotNull);
       expect(retrieved!.customerName, 'John Doe');
+      expect(retrieved.vehicleNumber, 'TN 38 AB 1234');
+      expect(retrieved.jobCardNumber, 'JC-1024');
       expect(retrieved.items.length, 1);
       expect(retrieved.items.first.totalPrice, 100.0);
     });
@@ -118,6 +126,8 @@ void main() {
       final bill = BillModel(
         invoiceNumber: 'INV-20260826-0001',
         customerName: 'Alice',
+        vehicleNumber: 'TN 38 AB 1234',
+        jobCardNumber: 'JC-1024',
         subtotal: 50.0,
         totalAmount: 50.0,
         createdAt: now,
@@ -127,8 +137,9 @@ void main() {
       ];
       final saved = await billingRepo.createBill(bill, items);
 
-      // Update bill with new items
+      // Update bill with new items and updated vehicle number
       final updatedBill = saved.copyWith(
+        vehicleNumber: 'TN 38 CD 5678',
         subtotal: 80.0,
         totalAmount: 80.0,
         updatedAt: DateTime.now(),
@@ -140,10 +151,13 @@ void main() {
 
       final updated = await billingRepo.updateBill(updatedBill, newItems);
       expect(updated.items.length, 2);
+      expect(updated.vehicleNumber, 'TN 38 CD 5678');
 
       final reloaded = await billingRepo.getBillWithItems(saved.id!);
       expect(reloaded!.items.length, 2);
       expect(reloaded.totalAmount, 80.0);
+      expect(reloaded.vehicleNumber, 'TN 38 CD 5678');
+      expect(reloaded.jobCardNumber, 'JC-1024');
     });
 
     test('Date-filtered billing history query works', () async {
@@ -226,6 +240,72 @@ void main() {
       expect(updated.address, 'Main Street, Udumalpet');
       expect(updated.taxEnabled, isTrue);
       expect(updated.taxPercent, 12.0);
+    });
+
+    test('Migration from v2 to v3 safely adds vehicle_number and job_card_no columns', () async {
+      // 1. Create a v2 database schema directly
+      final v2Db = await databaseFactory.openDatabase(
+        inMemoryDatabasePath,
+        options: OpenDatabaseOptions(
+          version: 2,
+          onCreate: (db, version) async {
+            await db.execute('''
+              CREATE TABLE bills (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                invoiceNumber TEXT UNIQUE,
+                customer_name TEXT,
+                customer_phone TEXT,
+                subtotal REAL NOT NULL,
+                discount_percent REAL DEFAULT 0,
+                discount_amount REAL DEFAULT 0,
+                tax_percent REAL DEFAULT 0,
+                tax_amount REAL DEFAULT 0,
+                total_amount REAL NOT NULL,
+                is_total_edited INTEGER DEFAULT 0,
+                created_at TEXT NOT NULL,
+                updated_at TEXT
+              )
+            ''');
+            await db.insert('bills', {
+              'invoiceNumber': 'INV-OLD-001',
+              'customer_name': 'Existing Customer',
+              'subtotal': 500.0,
+              'total_amount': 500.0,
+              'created_at': DateTime.now().toIso8601String(),
+            });
+          },
+        ),
+      );
+
+      // 2. Perform upgrade from v2 to v3
+      await DatabaseMigrations.onUpgrade(v2Db, 2, 3);
+
+      // 3. Query existing bill and verify columns exist and are null without crash
+      final rows = await v2Db.query('bills');
+      expect(rows.length, 1);
+      expect(rows.first['customer_name'], 'Existing Customer');
+      expect(rows.first.containsKey('vehicle_number'), isTrue);
+      expect(rows.first['vehicle_number'], isNull);
+      expect(rows.first.containsKey('job_card_no'), isTrue);
+      expect(rows.first['job_card_no'], isNull);
+
+      // 4. Insert new bill into upgraded database with vehicle & job card numbers
+      await v2Db.insert('bills', {
+        'invoiceNumber': 'INV-NEW-002',
+        'customer_name': 'New Customer',
+        'vehicle_number': 'TN 38 AB 9999',
+        'job_card_no': 'JC-2048',
+        'subtotal': 800.0,
+        'total_amount': 800.0,
+        'created_at': DateTime.now().toIso8601String(),
+      });
+
+      final allRows = await v2Db.query('bills');
+      expect(allRows.length, 2);
+      expect(allRows.last['vehicle_number'], 'TN 38 AB 9999');
+      expect(allRows.last['job_card_no'], 'JC-2048');
+
+      await v2Db.close();
     });
   });
 }

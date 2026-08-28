@@ -5,6 +5,7 @@ import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/widgets/loading_widget.dart';
 import '../provider/settings_provider.dart';
 import 'widgets/business_information_form.dart';
+import 'widgets/invoice_preview_card.dart';
 import 'widgets/tax_settings_form.dart';
 
 class SettingsScreen extends ConsumerWidget {
@@ -21,9 +22,8 @@ class SettingsScreen extends ConsumerWidget {
       ),
       body: settingsAsync.when(
         loading: () => const LoadingWidget(message: 'Loading settings...'),
-        error: (err, stack) => Center(
-          child: Text('Error loading settings: $err'),
-        ),
+        error: (err, stack) =>
+            Center(child: Text('Error loading settings: $err')),
         data: (settings) {
           return SingleChildScrollView(
             padding: const EdgeInsets.all(20),
@@ -35,6 +35,8 @@ class SettingsScreen extends ConsumerWidget {
                   BusinessInformationForm(settings: settings),
                   const SizedBox(height: 20),
                   TaxSettingsForm(settings: settings),
+                  const SizedBox(height: 20),
+                  // const InvoicePreviewCard(),
                 ],
               ),
             ),

@@ -22,6 +22,7 @@ class AppTextField extends StatelessWidget {
   final int? maxLength;
   final TextStyle? textStyle;
   final TextAlign textAlign;
+  final TextCapitalization textCapitalization;
 
   const AppTextField({
     super.key,
@@ -43,6 +44,7 @@ class AppTextField extends StatelessWidget {
     this.maxLength,
     this.textStyle,
     this.textAlign = TextAlign.start,
+    this.textCapitalization = TextCapitalization.none,
   });
 
   @override
@@ -59,6 +61,7 @@ class AppTextField extends StatelessWidget {
           controller: controller,
           focusNode: focusNode,
           keyboardType: keyboardType,
+          textCapitalization: textCapitalization,
           inputFormatters: [
             ...?inputFormatters,
             if (maxLength != null) LengthLimitingTextInputFormatter(maxLength),

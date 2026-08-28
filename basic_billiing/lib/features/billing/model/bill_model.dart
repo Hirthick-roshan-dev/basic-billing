@@ -7,6 +7,8 @@ class BillModel {
   final String invoiceNumber;
   final String? customerName;
   final String? customerPhone;
+  final String? vehicleNumber;
+  final String? jobCardNumber;
   final double subtotal;
   final double discountPercent;
   final double discountAmount;
@@ -23,6 +25,8 @@ class BillModel {
     required this.invoiceNumber,
     this.customerName,
     this.customerPhone,
+    this.vehicleNumber,
+    this.jobCardNumber,
     required this.subtotal,
     this.discountPercent = 0.0,
     this.discountAmount = 0.0,
@@ -40,6 +44,8 @@ class BillModel {
       DatabaseConstants.colBillInvoiceNumber: invoiceNumber,
       DatabaseConstants.colBillCustomerName: customerName,
       DatabaseConstants.colBillCustomerPhone: customerPhone,
+      DatabaseConstants.colBillVehicleNumber: vehicleNumber,
+      DatabaseConstants.colBillJobCardNumber: jobCardNumber,
       DatabaseConstants.colBillSubtotal: CurrencyUtils.round(subtotal),
       DatabaseConstants.colBillDiscountPercent: CurrencyUtils.round(discountPercent),
       DatabaseConstants.colBillDiscountAmount: CurrencyUtils.round(discountAmount),
@@ -62,6 +68,8 @@ class BillModel {
       invoiceNumber: map[DatabaseConstants.colBillInvoiceNumber] as String,
       customerName: map[DatabaseConstants.colBillCustomerName] as String?,
       customerPhone: map[DatabaseConstants.colBillCustomerPhone] as String?,
+      vehicleNumber: map[DatabaseConstants.colBillVehicleNumber] as String?,
+      jobCardNumber: map[DatabaseConstants.colBillJobCardNumber] as String?,
       subtotal: CurrencyUtils.round((map[DatabaseConstants.colBillSubtotal] as num).toDouble()),
       discountPercent: CurrencyUtils.round((map[DatabaseConstants.colBillDiscountPercent] as num?)?.toDouble() ?? 0.0),
       discountAmount: CurrencyUtils.round((map[DatabaseConstants.colBillDiscountAmount] as num?)?.toDouble() ?? 0.0),
@@ -82,6 +90,8 @@ class BillModel {
     String? invoiceNumber,
     String? customerName,
     String? customerPhone,
+    String? vehicleNumber,
+    String? jobCardNumber,
     double? subtotal,
     double? discountPercent,
     double? discountAmount,
@@ -98,6 +108,8 @@ class BillModel {
       invoiceNumber: invoiceNumber ?? this.invoiceNumber,
       customerName: customerName ?? this.customerName,
       customerPhone: customerPhone ?? this.customerPhone,
+      vehicleNumber: vehicleNumber ?? this.vehicleNumber,
+      jobCardNumber: jobCardNumber ?? this.jobCardNumber,
       subtotal: subtotal != null ? CurrencyUtils.round(subtotal) : this.subtotal,
       discountPercent: discountPercent != null ? CurrencyUtils.round(discountPercent) : this.discountPercent,
       discountAmount: discountAmount != null ? CurrencyUtils.round(discountAmount) : this.discountAmount,

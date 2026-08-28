@@ -86,6 +86,8 @@ class BillingNotifier extends StateNotifier<BillingProcessState> {
         invoiceNumber: invoiceNumber,
         customerName: cart.customerName.trim().isNotEmpty ? cart.customerName.trim() : null,
         customerPhone: cart.customerPhone.trim().isNotEmpty ? cart.customerPhone.trim() : null,
+        vehicleNumber: cart.vehicleNumber.trim().isNotEmpty ? cart.vehicleNumber.trim() : null,
+        jobCardNumber: cart.jobCardNumber.trim().isNotEmpty ? cart.jobCardNumber.trim() : null,
         subtotal: cart.subtotal,
         discountPercent: cart.discountPercent,
         discountAmount: cart.effectiveDiscountAmount,

@@ -90,6 +90,42 @@ class BillingCard extends StatelessWidget {
                         fontWeight: FontWeight.w500,
                       ),
                     ),
+                    if (bill.vehicleNumber?.isNotEmpty == true || bill.jobCardNumber?.isNotEmpty == true) ...[
+                      const SizedBox(height: 3),
+                      Row(
+                        children: [
+                          if (bill.vehicleNumber?.isNotEmpty == true) ...[
+                            const Icon(Icons.directions_car_outlined, size: 13, color: AppColors.primary),
+                            const SizedBox(width: 3),
+                            Text(
+                              bill.vehicleNumber!,
+                              style: AppTextStyles.bodySmall.copyWith(
+                                color: AppColors.primary,
+                                fontWeight: FontWeight.w600,
+                                fontSize: 11,
+                              ),
+                            ),
+                          ],
+                          if (bill.vehicleNumber?.isNotEmpty == true && bill.jobCardNumber?.isNotEmpty == true)
+                            const Padding(
+                              padding: EdgeInsets.symmetric(horizontal: 6),
+                              child: Text('•', style: TextStyle(color: AppColors.textTertiary, fontSize: 11)),
+                            ),
+                          if (bill.jobCardNumber?.isNotEmpty == true) ...[
+                            const Icon(Icons.assignment_outlined, size: 13, color: AppColors.textSecondary),
+                            const SizedBox(width: 3),
+                            Text(
+                              bill.jobCardNumber!,
+                              style: AppTextStyles.bodySmall.copyWith(
+                                color: AppColors.textSecondary,
+                                fontWeight: FontWeight.w600,
+                                fontSize: 11,
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ],
                   ],
                 ),
               ),

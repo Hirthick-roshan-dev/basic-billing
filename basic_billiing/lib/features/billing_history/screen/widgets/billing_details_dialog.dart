@@ -143,6 +143,16 @@ class _BillingDetailsDialogState extends ConsumerState<BillingDetailsDialog> {
                         style: AppTextStyles.bodySmall,
                       ),
                     ],
+                    if (bill.vehicleNumber?.isNotEmpty == true) ...[
+                      const SizedBox(height: 2),
+                      Text(
+                        'Vehicle No: ${bill.vehicleNumber}',
+                        style: AppTextStyles.bodySmall.copyWith(
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.primary,
+                        ),
+                      ),
+                    ],
                   ],
                 ),
                 Column(
@@ -158,6 +168,16 @@ class _BillingDetailsDialogState extends ConsumerState<BillingDetailsDialog> {
                       AppDateUtils.formatTime(bill.createdAt),
                       style: AppTextStyles.bodySmall,
                     ),
+                    if (bill.jobCardNumber?.isNotEmpty == true) ...[
+                      const SizedBox(height: 2),
+                      Text(
+                        'Job Card: ${bill.jobCardNumber}',
+                        style: AppTextStyles.bodySmall.copyWith(
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+                    ],
                   ],
                 ),
               ],
@@ -343,30 +363,41 @@ class _BillingDetailsDialogState extends ConsumerState<BillingDetailsDialog> {
           icon: Icons.picture_as_pdf,
           variant: AppButtonVariant.primary,
           onPressed: () async {
-            final fileService = ref.read(fileServiceProvider);
-            var file = await fileService.getInvoicePdf(bill.invoiceNumber);
-            if (file == null || !await file.exists()) {
-              // Generate and save if not exists
-              final settings = await ref
-                  .read(settingsRepositoryProvider)
-                  .getSettings();
-              final pdfService = ref.read(pdfServiceProvider);
-              final bytes = await pdfService.generateInvoicePdf(
-                bill: bill,
-                settings: settings,
-              );
-              await fileService.saveInvoicePdf(
-                invoiceNumber: bill.invoiceNumber,
-                bytes: bytes,
-              );
-            }
-            final opened = await fileService.openInvoicePdf(bill.invoiceNumber);
-            if (!opened && context.mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Could not open PDF with default viewer'),
-                ),
-              );
+            try {
+              final fileService = ref.read(fileServiceProvider);
+              var file = await fileService.getInvoicePdf(bill.invoiceNumber);
+              if (file == null || !await file.exists()) {
+                // Generate and save if not exists
+                final settings = await ref
+                    .read(settingsRepositoryProvider)
+                    .getSettings();
+                final pdfService = ref.read(pdfServiceProvider);
+                final bytes = await pdfService.generateInvoicePdf(
+                  bill: bill,
+                  settings: settings,
+                );
+                await fileService.saveInvoicePdf(
+                  invoiceNumber: bill.invoiceNumber,
+                  bytes: bytes,
+                );
+              }
+              final opened = await fileService.openInvoicePdf(bill.invoiceNumber);
+              if (!opened && context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Could not open PDF with default viewer'),
+                  ),
+                );
+              }
+            } catch (e) {
+              if (context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('Error generating PDF: $e'),
+                    backgroundColor: AppColors.error,
+                  ),
+                );
+              }
             }
           },
         ),

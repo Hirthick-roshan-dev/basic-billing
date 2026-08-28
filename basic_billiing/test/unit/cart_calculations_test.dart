@@ -98,5 +98,23 @@ void main() {
       expect(state.subtotal, 360.0);
       expect(state.payableTotal, 360.0);
     });
+
+    test('supports vehicleNumber and jobCardNumber in CartState copyWith', () {
+      const state = CartState(
+        customerName: 'John',
+        customerPhone: '9876543210',
+        vehicleNumber: 'TN 38 AB 1234',
+        jobCardNumber: 'JC-1024',
+      );
+
+      expect(state.customerName, 'John');
+      expect(state.customerPhone, '9876543210');
+      expect(state.vehicleNumber, 'TN 38 AB 1234');
+      expect(state.jobCardNumber, 'JC-1024');
+
+      final updated = state.copyWith(vehicleNumber: 'KL 07 CD 5678');
+      expect(updated.vehicleNumber, 'KL 07 CD 5678');
+      expect(updated.jobCardNumber, 'JC-1024');
+    });
   });
 }

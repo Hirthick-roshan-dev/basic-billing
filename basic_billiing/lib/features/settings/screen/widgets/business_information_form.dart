@@ -61,7 +61,9 @@ class _BusinessInformationFormState
 
     setState(() => _isSaving = true);
     try {
-      await ref.read(settingsProvider.notifier).updateBusinessInformation(
+      await ref
+          .read(settingsProvider.notifier)
+          .updateBusinessInformation(
             phoneNumber: _phoneController.text.trim(),
             address: _addressController.text.trim(),
           );
@@ -106,7 +108,11 @@ class _BusinessInformationFormState
           children: [
             Row(
               children: const [
-                Icon(Icons.storefront_outlined, color: AppColors.primary, size: 22),
+                Icon(
+                  Icons.storefront_outlined,
+                  color: AppColors.primary,
+                  size: 22,
+                ),
                 SizedBox(width: 10),
                 Text('Business Information', style: AppTextStyles.sectionTitle),
               ],
@@ -121,7 +127,11 @@ class _BusinessInformationFormState
               controller: _nameController,
               label: 'Store / Business Name (Fixed)',
               readOnly: true,
-              prefixIcon: const Icon(Icons.lock_outline, size: 18, color: AppColors.textTertiary),
+              prefixIcon: const Icon(
+                Icons.lock_outline,
+                size: 18,
+                color: AppColors.textTertiary,
+              ),
             ),
             const SizedBox(height: 14),
             AppTextField(
@@ -135,7 +145,8 @@ class _BusinessInformationFormState
             AppTextField(
               controller: _addressController,
               label: 'Store Address',
-              hintText: 'e.g. No.1, Park Avenue, Near Aravind Eye Hospital, Udumalpet - 642126',
+              hintText:
+                  'e.g. No.1, Park Avenue, Near Aravind Eye Hospital, Udumalpet - 642126',
               prefixIcon: const Icon(Icons.location_on_outlined, size: 18),
               maxLines: 2,
               validator: (v) => Validators.validateRequired(v, 'Store address'),

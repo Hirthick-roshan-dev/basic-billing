@@ -9,6 +9,8 @@ class CartState {
   final List<CartItemModel> items;
   final String customerName;
   final String customerPhone;
+  final String vehicleNumber;
+  final String jobCardNumber;
   final double discountAmount;
   final bool taxEnabled;
   final double taxPercent;
@@ -19,6 +21,8 @@ class CartState {
     this.items = const [],
     this.customerName = '',
     this.customerPhone = '',
+    this.vehicleNumber = '',
+    this.jobCardNumber = '',
     this.discountAmount = 0.0,
     this.taxEnabled = false,
     this.taxPercent = 0.0,
@@ -82,6 +86,8 @@ class CartState {
     List<CartItemModel>? items,
     String? customerName,
     String? customerPhone,
+    String? vehicleNumber,
+    String? jobCardNumber,
     double? discountAmount,
     bool? taxEnabled,
     double? taxPercent,
@@ -93,6 +99,8 @@ class CartState {
       items: items ?? this.items,
       customerName: customerName ?? this.customerName,
       customerPhone: customerPhone ?? this.customerPhone,
+      vehicleNumber: vehicleNumber ?? this.vehicleNumber,
+      jobCardNumber: jobCardNumber ?? this.jobCardNumber,
       discountAmount: discountAmount != null ? CurrencyUtils.round(discountAmount) : this.discountAmount,
       taxEnabled: taxEnabled ?? this.taxEnabled,
       taxPercent: taxPercent != null ? CurrencyUtils.round(taxPercent) : this.taxPercent,
@@ -192,6 +200,14 @@ class CartNotifier extends Notifier<CartState> {
     state = state.copyWith(customerPhone: phone);
   }
 
+  void setVehicleNumber(String vehicleNumber) {
+    state = state.copyWith(vehicleNumber: vehicleNumber);
+  }
+
+  void setJobCardNumber(String jobCardNumber) {
+    state = state.copyWith(jobCardNumber: jobCardNumber);
+  }
+
   void setDiscountAmount(double amount) {
     state = state.copyWith(discountAmount: CurrencyUtils.round(amount.clamp(0.0, double.infinity)));
   }
@@ -236,6 +252,8 @@ class CartNotifier extends Notifier<CartState> {
       items: cartItems,
       customerName: bill.customerName ?? '',
       customerPhone: bill.customerPhone ?? '',
+      vehicleNumber: bill.vehicleNumber ?? '',
+      jobCardNumber: bill.jobCardNumber ?? '',
       discountAmount: bill.discountAmount,
       taxEnabled: bill.taxPercent > 0 || bill.taxAmount > 0,
       taxPercent: bill.taxPercent,
