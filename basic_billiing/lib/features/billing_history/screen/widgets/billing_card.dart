@@ -60,8 +60,49 @@ class BillingCard extends StatelessWidget {
                             color: AppColors.textPrimary,
                           ),
                         ),
+                        const SizedBox(width: 8),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: bill.paymentType.toUpperCase() == 'UPI'
+                                ? Colors.deepPurple.withValues(alpha: 0.1)
+                                : AppColors.successLight,
+                            borderRadius: BorderRadius.circular(4),
+                            border: Border.all(
+                              color: bill.paymentType.toUpperCase() == 'UPI'
+                                  ? Colors.deepPurple.shade300
+                                  : AppColors.success.withValues(alpha: 0.6),
+                              width: 0.8,
+                            ),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                bill.paymentType.toUpperCase() == 'UPI'
+                                    ? Icons.qr_code_2_outlined
+                                    : Icons.payments_outlined,
+                                size: 11,
+                                color: bill.paymentType.toUpperCase() == 'UPI'
+                                    ? Colors.deepPurple.shade700
+                                    : AppColors.success,
+                              ),
+                              const SizedBox(width: 3),
+                              Text(
+                                bill.paymentType.toUpperCase(),
+                                style: TextStyle(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.bold,
+                                  color: bill.paymentType.toUpperCase() == 'UPI'
+                                      ? Colors.deepPurple.shade700
+                                      : AppColors.success,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
                         if (bill.isTotalEdited) ...[
-                          const SizedBox(width: 8),
+                          const SizedBox(width: 6),
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                             decoration: BoxDecoration(

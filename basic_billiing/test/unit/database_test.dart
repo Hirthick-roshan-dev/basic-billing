@@ -6,6 +6,7 @@ import 'package:basic_billiing/features/billing/model/bill_model.dart';
 import 'package:basic_billiing/features/billing/model/bill_item_model.dart';
 import 'package:basic_billiing/features/billing/model/product_model.dart';
 import 'package:basic_billiing/features/billing/repo/billing_repository.dart';
+import 'package:basic_billiing/features/billing/repo/offer_repository.dart';
 import 'package:basic_billiing/features/billing/repo/product_repository.dart';
 import 'package:basic_billiing/features/billing_history/repo/billing_history_repository.dart';
 import 'package:basic_billiing/features/settings/model/business_settings_model.dart';
@@ -17,6 +18,7 @@ void main() {
 
   late Database db;
   late ProductRepository productRepo;
+  late OfferRepository offerRepo;
   late BillingRepository billingRepo;
   late BillingHistoryRepository historyRepo;
   late SettingsRepository settingsRepo;
@@ -32,6 +34,7 @@ void main() {
     );
 
     productRepo = ProductRepository(db: db);
+    offerRepo = OfferRepository(db: db);
     billingRepo = BillingRepository(db: db);
     historyRepo = BillingHistoryRepository(db: db);
     settingsRepo = SettingsRepository(db: db);
@@ -84,6 +87,7 @@ void main() {
         vehicleModel: 'Swift',
         km: '45000',
         jobCardNumber: 'JC-1024',
+        paymentType: 'UPI',
         subtotal: 100.0,
         discountPercent: 10.0,
         discountAmount: 10.0,
@@ -110,6 +114,7 @@ void main() {
       expect(saved.vehicleModel, 'Swift');
       expect(saved.km, '45000');
       expect(saved.jobCardNumber, 'JC-1024');
+      expect(saved.paymentType, 'UPI');
 
       // Verify sequence increments for next bill on same date
       final nextInvNumber = await billingRepo.generateNextInvoiceNumber(now);
@@ -123,6 +128,7 @@ void main() {
       expect(retrieved.vehicleModel, 'Swift');
       expect(retrieved.km, '45000');
       expect(retrieved.jobCardNumber, 'JC-1024');
+      expect(retrieved.paymentType, 'UPI');
       expect(retrieved.items.length, 1);
       expect(retrieved.items.first.totalPrice, 100.0);
     });
@@ -136,6 +142,7 @@ void main() {
         vehicleModel: 'Swift',
         km: '45000',
         jobCardNumber: 'JC-1024',
+        paymentType: 'Cash',
         subtotal: 50.0,
         totalAmount: 50.0,
         createdAt: now,
@@ -145,11 +152,12 @@ void main() {
       ];
       final saved = await billingRepo.createBill(bill, items);
 
-      // Update bill with new items and updated vehicle number
+      // Update bill with new items and updated vehicle number & payment type
       final updatedBill = saved.copyWith(
         vehicleNumber: 'TN 38 CD 5678',
         vehicleModel: 'Creta',
         km: '52000',
+        paymentType: 'UPI',
         subtotal: 80.0,
         totalAmount: 80.0,
         updatedAt: DateTime.now(),
@@ -164,6 +172,7 @@ void main() {
       expect(updated.vehicleNumber, 'TN 38 CD 5678');
       expect(updated.vehicleModel, 'Creta');
       expect(updated.km, '52000');
+      expect(updated.paymentType, 'UPI');
 
       final reloaded = await billingRepo.getBillWithItems(saved.id!);
       expect(reloaded!.items.length, 2);
@@ -172,6 +181,7 @@ void main() {
       expect(reloaded.vehicleModel, 'Creta');
       expect(reloaded.km, '52000');
       expect(reloaded.jobCardNumber, 'JC-1024');
+      expect(reloaded.paymentType, 'UPI');
     });
 
     test('Date-filtered billing history query works', () async {
@@ -320,6 +330,139 @@ void main() {
       expect(allRows.last['job_card_no'], 'JC-2048');
 
       await v2Db.close();
+    });
+
+    test('Migration from v4 to v5 safely adds payment_type column with default Cash', () async {
+      // 1. Create a v4 database schema
+      final v4Db = await databaseFactory.openDatabase(
+        inMemoryDatabasePath,
+        options: OpenDatabaseOptions(
+          version: 4,
+          onCreate: (db, version) async {
+            await db.execute('''
+              CREATE TABLE bills (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                invoice_number TEXT UNIQUE,
+                customer_name TEXT,
+                vehicle_number TEXT,
+                vehicle_model TEXT,
+                km TEXT,
+                job_card_no TEXT,
+                subtotal REAL NOT NULL,
+                total_amount REAL NOT NULL,
+                created_at TEXT NOT NULL
+              )
+            ''');
+            await db.insert('bills', {
+              'invoice_number': 'INV-V4-001',
+              'customer_name': 'V4 Customer',
+              'subtotal': 500.0,
+              'total_amount': 500.0,
+              'created_at': DateTime.now().toIso8601String(),
+            });
+          },
+        ),
+      );
+
+      // 2. Upgrade from v4 to v5
+      await DatabaseMigrations.onUpgrade(v4Db, 4, 5);
+
+      // 3. Query existing bill and verify payment_type exists and defaults to Cash
+      final rows = await v4Db.query('bills');
+      expect(rows.length, 1);
+      expect(rows.first['customer_name'], 'V4 Customer');
+      expect(rows.first.containsKey('payment_type'), isTrue);
+      expect(rows.first['payment_type'], 'Cash');
+
+      // 4. Insert new bill with UPI payment type
+      await v4Db.insert('bills', {
+        'invoice_number': 'INV-V5-002',
+        'customer_name': 'V5 Customer',
+        'payment_type': 'UPI',
+        'subtotal': 1200.0,
+        'total_amount': 1200.0,
+        'created_at': DateTime.now().toIso8601String(),
+      });
+
+      final allRows = await v4Db.query('bills');
+      expect(allRows.length, 2);
+      expect(allRows.first['payment_type'], 'Cash');
+      expect(allRows.last['payment_type'], 'UPI');
+
+      await v4Db.close();
+    });
+
+    test('Offer products CRUD operations work properly', () async {
+      final p1 = ProductModel(
+        id: 10,
+        name: 'Oil Filter',
+        price: 250.0,
+        createdAt: DateTime.now(),
+      );
+      final p2 = ProductModel(
+        id: 11,
+        name: 'Brake Pads',
+        price: 850.0,
+        createdAt: DateTime.now(),
+      );
+
+      // 1. Add offer products
+      await offerRepo.addOfferProduct(p1);
+      await offerRepo.addOfferProduct(p2);
+
+      // 2. Verify list
+      final offers = await offerRepo.getOfferProducts();
+      expect(offers.length, 2);
+      expect(await offerRepo.isOfferProduct('Oil Filter'), isTrue);
+      expect(await offerRepo.isOfferProduct('Brake Pads'), isTrue);
+      expect(await offerRepo.isOfferProduct('Air Filter'), isFalse);
+
+      // 3. Remove offer product
+      await offerRepo.removeOfferProduct('Oil Filter');
+      final updatedOffers = await offerRepo.getOfferProducts();
+      expect(updatedOffers.length, 1);
+      expect(updatedOffers.first.name, 'Brake Pads');
+
+      // 4. Clear all offers
+      await offerRepo.clearOfferProducts();
+      final emptyOffers = await offerRepo.getOfferProducts();
+      expect(emptyOffers.isEmpty, isTrue);
+    });
+
+    test('Migration from v5 to v6 safely creates offer_products table', () async {
+      final v5Db = await databaseFactory.openDatabase(
+        inMemoryDatabasePath,
+        options: OpenDatabaseOptions(
+          version: 5,
+          onCreate: (db, version) async {
+            await db.execute('''
+              CREATE TABLE bills (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                invoice_number TEXT UNIQUE,
+                payment_type TEXT DEFAULT 'Cash',
+                subtotal REAL NOT NULL,
+                total_amount REAL NOT NULL,
+                created_at TEXT NOT NULL
+              )
+            ''');
+          },
+        ),
+      );
+
+      // Upgrade from v5 to v6
+      await DatabaseMigrations.onUpgrade(v5Db, 5, 6);
+
+      // Insert and query offer products on upgraded db
+      final v6OfferRepo = OfferRepository(db: v5Db);
+      await v6OfferRepo.addOfferProduct(
+        ProductModel(name: 'Coolant', price: 300.0, createdAt: DateTime.now()),
+      );
+
+      final offers = await v6OfferRepo.getOfferProducts();
+      expect(offers.length, 1);
+      expect(offers.first.name, 'Coolant');
+
+      await v5Db.close();
     });
   });
 }

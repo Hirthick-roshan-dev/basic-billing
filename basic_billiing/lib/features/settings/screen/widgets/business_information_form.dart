@@ -69,12 +69,12 @@ class _BusinessInformationFormState
           );
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Business information updated successfully'),
-            duration: Duration(seconds: 2),
-          ),
-        );
+        // ScaffoldMessenger.of(context).showSnackBar(
+        //   const SnackBar(
+        //     content: Text('Business information updated successfully'),
+        //     duration: Duration(seconds: 2),
+        //   ),
+        // );
       }
     } catch (e) {
       if (mounted) {

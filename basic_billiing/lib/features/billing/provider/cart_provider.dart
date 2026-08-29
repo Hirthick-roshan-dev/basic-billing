@@ -13,6 +13,7 @@ class CartState {
   final String vehicleModel;
   final String km;
   final String jobCardNumber;
+  final String paymentType;
   final double discountAmount;
   final bool taxEnabled;
   final double taxPercent;
@@ -27,6 +28,7 @@ class CartState {
     this.vehicleModel = '',
     this.km = '',
     this.jobCardNumber = '',
+    this.paymentType = 'Cash',
     this.discountAmount = 0.0,
     this.taxEnabled = false,
     this.taxPercent = 0.0,
@@ -94,6 +96,7 @@ class CartState {
     String? vehicleModel,
     String? km,
     String? jobCardNumber,
+    String? paymentType,
     double? discountAmount,
     bool? taxEnabled,
     double? taxPercent,
@@ -109,6 +112,7 @@ class CartState {
       vehicleModel: vehicleModel ?? this.vehicleModel,
       km: km ?? this.km,
       jobCardNumber: jobCardNumber ?? this.jobCardNumber,
+      paymentType: paymentType ?? this.paymentType,
       discountAmount: discountAmount != null ? CurrencyUtils.round(discountAmount) : this.discountAmount,
       taxEnabled: taxEnabled ?? this.taxEnabled,
       taxPercent: taxPercent != null ? CurrencyUtils.round(taxPercent) : this.taxPercent,
@@ -132,6 +136,7 @@ class CartNotifier extends Notifier<CartState> {
     return CartState(
       taxEnabled: settings?.taxEnabled ?? false,
       taxPercent: settings?.taxPercent ?? 0.0,
+      paymentType: 'Cash',
     );
   }
 
@@ -224,6 +229,10 @@ class CartNotifier extends Notifier<CartState> {
     state = state.copyWith(jobCardNumber: jobCardNumber);
   }
 
+  void setPaymentType(String paymentType) {
+    state = state.copyWith(paymentType: paymentType);
+  }
+
   void setDiscountAmount(double amount) {
     state = state.copyWith(discountAmount: CurrencyUtils.round(amount.clamp(0.0, double.infinity)));
   }
@@ -272,6 +281,7 @@ class CartNotifier extends Notifier<CartState> {
       vehicleModel: bill.vehicleModel ?? '',
       km: bill.km ?? '',
       jobCardNumber: bill.jobCardNumber ?? '',
+      paymentType: bill.paymentType,
       discountAmount: bill.discountAmount,
       taxEnabled: bill.taxPercent > 0 || bill.taxAmount > 0,
       taxPercent: bill.taxPercent,
@@ -287,6 +297,7 @@ class CartNotifier extends Notifier<CartState> {
     state = CartState(
       taxEnabled: settings?.taxEnabled ?? false,
       taxPercent: settings?.taxPercent ?? 0.0,
+      paymentType: 'Cash',
     );
   }
 }

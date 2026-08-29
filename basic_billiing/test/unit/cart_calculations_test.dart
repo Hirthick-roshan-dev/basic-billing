@@ -126,5 +126,16 @@ void main() {
       expect(updated.km, '50000');
       expect(updated.jobCardNumber, 'JC-1024');
     });
+
+    test('supports paymentType in CartState defaults and copyWith', () {
+      const defaultState = CartState();
+      expect(defaultState.paymentType, 'Cash');
+
+      final upiState = defaultState.copyWith(paymentType: 'UPI');
+      expect(upiState.paymentType, 'UPI');
+
+      final cashState = upiState.copyWith(paymentType: 'Cash');
+      expect(cashState.paymentType, 'Cash');
+    });
   });
 }

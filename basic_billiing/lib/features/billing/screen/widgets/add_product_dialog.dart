@@ -14,7 +14,10 @@ class AddProductDialog extends ConsumerStatefulWidget {
 
   const AddProductDialog({super.key, this.productToEdit});
 
-  static Future<ProductModel?> show(BuildContext context, {ProductModel? productToEdit}) {
+  static Future<ProductModel?> show(
+    BuildContext context, {
+    ProductModel? productToEdit,
+  }) {
     return showDialog<ProductModel>(
       context: context,
       barrierDismissible: false,
@@ -35,9 +38,13 @@ class _AddProductDialogState extends ConsumerState<AddProductDialog> {
   @override
   void initState() {
     super.initState();
-    _nameController = TextEditingController(text: widget.productToEdit?.name ?? '');
+    _nameController = TextEditingController(
+      text: widget.productToEdit?.name ?? '',
+    );
     _priceController = TextEditingController(
-      text: widget.productToEdit != null ? CurrencyUtils.formatPlain(widget.productToEdit!.price) : '',
+      text: widget.productToEdit != null
+          ? CurrencyUtils.formatPlain(widget.productToEdit!.price)
+          : '',
     );
   }
 
@@ -58,28 +65,30 @@ class _AddProductDialogState extends ConsumerState<AddProductDialog> {
 
       ProductModel result;
       if (widget.productToEdit != null) {
-        final updated = widget.productToEdit!.copyWith(name: name, price: price);
+        final updated = widget.productToEdit!.copyWith(
+          name: name,
+          price: price,
+        );
         await ref.read(productListProvider.notifier).updateProduct(updated);
         result = updated;
       } else {
-        result = await ref.read(productListProvider.notifier).addProduct(
-              name: name,
-              price: price,
-            );
+        result = await ref
+            .read(productListProvider.notifier)
+            .addProduct(name: name, price: price);
       }
 
       if (mounted) {
         Navigator.of(context).pop(result);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              widget.productToEdit != null
-                  ? 'Product updated successfully'
-                  : 'Product added successfully',
-            ),
-            duration: const Duration(seconds: 2),
-          ),
-        );
+        // ScaffoldMessenger.of(context).showSnackBar(
+        //   SnackBar(
+        //     content: Text(
+        //       widget.productToEdit != null
+        //           ? 'Product updated successfully'
+        //           : 'Product added successfully',
+        //     ),
+        //     duration: const Duration(seconds: 2),
+        //   ),
+        // );
       }
     } catch (e) {
       if (mounted) {
@@ -116,7 +125,8 @@ class _AddProductDialogState extends ConsumerState<AddProductDialog> {
               hintText: 'e.g. Engine Oil, Brake Pad, Oil Filter',
               maxLength: 80,
               autofocus: true,
-              validator: (v) => Validators.validateProductName(v, maxLength: 80),
+              validator: (v) =>
+                  Validators.validateProductName(v, maxLength: 80),
             ),
             const SizedBox(height: 16),
             AppTextField(
@@ -124,7 +134,9 @@ class _AddProductDialogState extends ConsumerState<AddProductDialog> {
               label: 'Unit Price',
               hintText: '0.00',
               prefixText: '${CurrencyUtils.defaultCurrencySymbol} ',
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              keyboardType: const TextInputType.numberWithOptions(
+                decimal: true,
+              ),
               inputFormatters: [
                 FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d{0,2}')),
               ],

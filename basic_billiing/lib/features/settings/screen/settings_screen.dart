@@ -36,7 +36,7 @@ class SettingsScreen extends ConsumerWidget {
                   const SizedBox(height: 20),
                   TaxSettingsForm(settings: settings),
                   const SizedBox(height: 20),
-                  const InvoicePreviewCard(),
+                  // const InvoicePreviewCard(),
                 ],
               ),
             ),

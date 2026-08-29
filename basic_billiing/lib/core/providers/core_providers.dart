@@ -6,6 +6,7 @@ import '../services/pdf_service.dart';
 import '../../features/billing/repo/product_repository.dart';
 import '../../features/billing/repo/billing_repository.dart';
 import '../../features/billing_history/repo/billing_history_repository.dart';
+import '../../features/billing/repo/offer_repository.dart';
 import '../../features/settings/repo/settings_repository.dart';
 
 // Synchronous Database Provider reading the initialized database singleton
@@ -26,6 +27,11 @@ final pdfServiceProvider = Provider<IPdfService>((ref) {
 final productRepositoryProvider = Provider<IProductRepository>((ref) {
   final db = ref.watch(databaseProvider);
   return ProductRepository(db: db);
+});
+
+final offerRepositoryProvider = Provider<IOfferRepository>((ref) {
+  final db = ref.watch(databaseProvider);
+  return OfferRepository(db: db);
 });
 
 final billingRepositoryProvider = Provider<IBillingRepository>((ref) {

@@ -27,6 +27,7 @@ class DatabaseMigrations {
         ${DatabaseConstants.colBillVehicleModel} TEXT,
         ${DatabaseConstants.colBillKm} TEXT,
         ${DatabaseConstants.colBillJobCardNumber} TEXT,
+        ${DatabaseConstants.colBillPaymentType} TEXT DEFAULT 'Cash',
         ${DatabaseConstants.colBillSubtotal} REAL NOT NULL,
         ${DatabaseConstants.colBillDiscountPercent} REAL DEFAULT 0,
         ${DatabaseConstants.colBillDiscountAmount} REAL DEFAULT 0,
@@ -62,6 +63,17 @@ class DatabaseMigrations {
         ${DatabaseConstants.colSettingsTaxEnabled} INTEGER DEFAULT 0,
         ${DatabaseConstants.colSettingsTaxPercent} REAL DEFAULT 0,
         ${DatabaseConstants.colSettingsUpdatedAt} TEXT
+      )
+    ''');
+
+    // Offer Products Table
+    await db.execute('''
+      CREATE TABLE ${DatabaseConstants.tableOfferProducts} (
+        ${DatabaseConstants.colOfferId} INTEGER PRIMARY KEY AUTOINCREMENT,
+        ${DatabaseConstants.colOfferProductId} INTEGER,
+        ${DatabaseConstants.colOfferProductName} TEXT NOT NULL,
+        ${DatabaseConstants.colOfferProductPrice} REAL NOT NULL,
+        ${DatabaseConstants.colOfferCreatedAt} TEXT NOT NULL
       )
     ''');
 
@@ -131,6 +143,30 @@ class DatabaseMigrations {
         await db.execute(
           'ALTER TABLE ${DatabaseConstants.tableBills} ADD COLUMN ${DatabaseConstants.colBillKm} TEXT',
         );
+      } catch (_) {}
+    }
+
+    if (oldVersion < 5) {
+      // Add payment_type column to bills table (default 'Cash', safe for existing data)
+      try {
+        await db.execute(
+          "ALTER TABLE ${DatabaseConstants.tableBills} ADD COLUMN ${DatabaseConstants.colBillPaymentType} TEXT DEFAULT 'Cash'",
+        );
+      } catch (_) {}
+    }
+
+    if (oldVersion < 6) {
+      // Add offer_products table
+      try {
+        await db.execute('''
+          CREATE TABLE IF NOT EXISTS ${DatabaseConstants.tableOfferProducts} (
+            ${DatabaseConstants.colOfferId} INTEGER PRIMARY KEY AUTOINCREMENT,
+            ${DatabaseConstants.colOfferProductId} INTEGER,
+            ${DatabaseConstants.colOfferProductName} TEXT NOT NULL,
+            ${DatabaseConstants.colOfferProductPrice} REAL NOT NULL,
+            ${DatabaseConstants.colOfferCreatedAt} TEXT NOT NULL
+          )
+        ''');
       } catch (_) {}
     }
   }

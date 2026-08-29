@@ -197,7 +197,38 @@ class _BillingSummaryState extends ConsumerState<BillingSummary> {
           ],
 
           const Padding(
-            padding: EdgeInsets.symmetric(vertical: 12),
+            padding: EdgeInsets.symmetric(vertical: 10),
+            child: Divider(),
+          ),
+
+          // Payment Type Row
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text('Payment Type', style: AppTextStyles.bodyMedium),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  _buildPaymentTypeButton(
+                    label: 'Cash',
+                    icon: Icons.payments_outlined,
+                    isSelected: cart.paymentType.toLowerCase() == 'cash',
+                    onTap: () => ref.read(cartProvider.notifier).setPaymentType('Cash'),
+                  ),
+                  const SizedBox(width: 8),
+                  _buildPaymentTypeButton(
+                    label: 'UPI',
+                    icon: Icons.qr_code_2_outlined,
+                    isSelected: cart.paymentType.toLowerCase() == 'upi',
+                    onTap: () => ref.read(cartProvider.notifier).setPaymentType('UPI'),
+                  ),
+                ],
+              ),
+            ],
+          ),
+
+          const Padding(
+            padding: EdgeInsets.symmetric(vertical: 10),
             child: Divider(),
           ),
 
@@ -292,6 +323,61 @@ class _BillingSummaryState extends ConsumerState<BillingSummary> {
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildPaymentTypeButton({
+    required String label,
+    required IconData icon,
+    required bool isSelected,
+    required VoidCallback onTap,
+  }) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(8),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 150),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
+          decoration: BoxDecoration(
+            color: isSelected ? AppColors.primary : AppColors.surface,
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(
+              color: isSelected ? AppColors.primary : AppColors.border,
+              width: 1.5,
+            ),
+            boxShadow: isSelected
+                ? [
+                    BoxShadow(
+                      color: AppColors.primary.withValues(alpha: 0.25),
+                      blurRadius: 4,
+                      offset: const Offset(0, 2),
+                    ),
+                  ]
+                : null,
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                icon,
+                size: 16,
+                color: isSelected ? Colors.white : AppColors.textSecondary,
+              ),
+              const SizedBox(width: 6),
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                  color: isSelected ? Colors.white : AppColors.textPrimary,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

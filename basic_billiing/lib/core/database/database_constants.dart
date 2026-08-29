@@ -2,13 +2,14 @@ class DatabaseConstants {
   DatabaseConstants._();
 
   static const String databaseName = 'billing_app.db';
-  static const int databaseVersion = 4;
+  static const int databaseVersion = 6;
 
   // Tables
   static const String tableProducts = 'products';
   static const String tableBills = 'bills';
   static const String tableBillItems = 'bill_items';
   static const String tableBusinessSettings = 'business_settings';
+  static const String tableOfferProducts = 'offer_products';
 
   // Products Columns
   static const String colProductId = 'id';
@@ -26,6 +27,7 @@ class DatabaseConstants {
   static const String colBillVehicleModel = 'vehicle_model';
   static const String colBillKm = 'km';
   static const String colBillJobCardNumber = 'job_card_no';
+  static const String colBillPaymentType = 'payment_type';
   static const String colBillSubtotal = 'subtotal';
   static const String colBillDiscountPercent = 'discount_percent';
   static const String colBillDiscountAmount = 'discount_amount';
@@ -52,4 +54,11 @@ class DatabaseConstants {
   static const String colSettingsTaxEnabled = 'tax_enabled';
   static const String colSettingsTaxPercent = 'tax_percent';
   static const String colSettingsUpdatedAt = 'updated_at';
+
+  // Offer Products Columns
+  static const String colOfferId = 'id';
+  static const String colOfferProductId = 'product_id';
+  static const String colOfferProductName = 'product_name';
+  static const String colOfferProductPrice = 'product_price';
+  static const String colOfferCreatedAt = 'created_at';
 }

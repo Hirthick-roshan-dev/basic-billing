@@ -290,6 +290,15 @@ class PdfService implements IPdfService {
                               ),
                             ),
                           ],
+                          pw.SizedBox(height: 3),
+                          // pw.Text(
+                          //   'Payment Mode: ${bill.paymentType.toUpperCase()}',
+                          //   style: pw.TextStyle(
+                          //     fontSize: 9.5,
+                          //     fontWeight: pw.FontWeight.bold,
+                          //     color: brandNavy,
+                          //   ),
+                          // ),
                         ],
                       ),
                     ],
@@ -431,6 +440,12 @@ class PdfService implements IPdfService {
                                     '+ ${formatMoney(bill.taxAmount)}',
                                   ),
                                 ],
+                                pw.SizedBox(height: 4),
+                                _buildSummaryRow(
+                                  'Payment Mode',
+                                  bill.paymentType.toUpperCase(),
+                                  fontBold: fontBold,
+                                ),
                                 pw.SizedBox(height: 6),
                                 pw.Divider(
                                   thickness: 0.8,

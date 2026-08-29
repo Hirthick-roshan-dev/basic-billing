@@ -11,6 +11,7 @@ class BillModel {
   final String? vehicleModel;
   final String? km;
   final String? jobCardNumber;
+  final String paymentType;
   final double subtotal;
   final double discountPercent;
   final double discountAmount;
@@ -31,6 +32,7 @@ class BillModel {
     this.vehicleModel,
     this.km,
     this.jobCardNumber,
+    this.paymentType = 'Cash',
     required this.subtotal,
     this.discountPercent = 0.0,
     this.discountAmount = 0.0,
@@ -52,6 +54,7 @@ class BillModel {
       DatabaseConstants.colBillVehicleModel: vehicleModel,
       DatabaseConstants.colBillKm: km,
       DatabaseConstants.colBillJobCardNumber: jobCardNumber,
+      DatabaseConstants.colBillPaymentType: paymentType,
       DatabaseConstants.colBillSubtotal: CurrencyUtils.round(subtotal),
       DatabaseConstants.colBillDiscountPercent: CurrencyUtils.round(discountPercent),
       DatabaseConstants.colBillDiscountAmount: CurrencyUtils.round(discountAmount),
@@ -78,6 +81,7 @@ class BillModel {
       vehicleModel: map[DatabaseConstants.colBillVehicleModel] as String?,
       km: map[DatabaseConstants.colBillKm] as String?,
       jobCardNumber: map[DatabaseConstants.colBillJobCardNumber] as String?,
+      paymentType: (map[DatabaseConstants.colBillPaymentType] as String?) ?? 'Cash',
       subtotal: CurrencyUtils.round((map[DatabaseConstants.colBillSubtotal] as num).toDouble()),
       discountPercent: CurrencyUtils.round((map[DatabaseConstants.colBillDiscountPercent] as num?)?.toDouble() ?? 0.0),
       discountAmount: CurrencyUtils.round((map[DatabaseConstants.colBillDiscountAmount] as num?)?.toDouble() ?? 0.0),
@@ -102,6 +106,7 @@ class BillModel {
     String? vehicleModel,
     String? km,
     String? jobCardNumber,
+    String? paymentType,
     double? subtotal,
     double? discountPercent,
     double? discountAmount,
@@ -122,6 +127,7 @@ class BillModel {
       vehicleModel: vehicleModel ?? this.vehicleModel,
       km: km ?? this.km,
       jobCardNumber: jobCardNumber ?? this.jobCardNumber,
+      paymentType: paymentType ?? this.paymentType,
       subtotal: subtotal != null ? CurrencyUtils.round(subtotal) : this.subtotal,
       discountPercent: discountPercent != null ? CurrencyUtils.round(discountPercent) : this.discountPercent,
       discountAmount: discountAmount != null ? CurrencyUtils.round(discountAmount) : this.discountAmount,

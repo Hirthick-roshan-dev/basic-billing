@@ -199,6 +199,31 @@ class _BillingDetailsDialogState extends ConsumerState<BillingDetailsDialog> {
                         ),
                       ),
                     ],
+                    const SizedBox(height: 4),
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          bill.paymentType.toUpperCase() == 'UPI'
+                              ? Icons.qr_code_2_outlined
+                              : Icons.payments_outlined,
+                          size: 13,
+                          color: bill.paymentType.toUpperCase() == 'UPI'
+                              ? Colors.deepPurple.shade700
+                              : AppColors.success,
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          'Paid via ${bill.paymentType.toUpperCase()}',
+                          style: AppTextStyles.bodySmall.copyWith(
+                            fontWeight: FontWeight.bold,
+                            color: bill.paymentType.toUpperCase() == 'UPI'
+                                ? Colors.deepPurple.shade700
+                                : AppColors.success,
+                          ),
+                        ),
+                      ],
+                    ),
                   ],
                 ),
               ],
@@ -336,6 +361,13 @@ class _BillingDetailsDialogState extends ConsumerState<BillingDetailsDialog> {
                     'Tax (${CurrencyUtils.formatPlain(bill.taxPercent)}%)',
                     '+ ${CurrencyUtils.format(bill.taxAmount)}',
                   ),
+                _buildSummaryLine(
+                  'Payment Type',
+                  bill.paymentType.toUpperCase(),
+                  color: bill.paymentType.toUpperCase() == 'UPI'
+                      ? Colors.deepPurple.shade700
+                      : AppColors.success,
+                ),
                 const SizedBox(height: 6),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,

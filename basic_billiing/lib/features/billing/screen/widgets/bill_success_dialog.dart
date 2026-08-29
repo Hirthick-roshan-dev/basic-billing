@@ -78,7 +78,7 @@ class _BillSuccessDialogState extends ConsumerState<BillSuccessDialog> {
                       ),
                       const SizedBox(height: 2),
                       Text(
-                        'Total: ${CurrencyUtils.format(bill.totalAmount)}  •  ${bill.items.length} items',
+                        'Total: ${CurrencyUtils.format(bill.totalAmount)}  •  ${bill.paymentType.toUpperCase()}  •  ${bill.items.length} items',
                         style: AppTextStyles.bodySmall,
                       ),
                     ],
@@ -106,15 +106,16 @@ class _BillSuccessDialogState extends ConsumerState<BillSuccessDialog> {
                   setState(() => _isOpeningPdf = true);
                   try {
                     final fileService = ref.read(fileServiceProvider);
-                    final opened =
-                        await fileService.openInvoicePdf(bill.invoiceNumber);
+                    final opened = await fileService.openInvoicePdf(
+                      bill.invoiceNumber,
+                    );
                     if (!opened && context.mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content:
-                              Text('Could not open PDF with default viewer'),
-                        ),
-                      );
+                      // ScaffoldMessenger.of(context).showSnackBar(
+                      //   const SnackBar(
+                      //     content:
+                      //         Text('Could not open PDF with default viewer'),
+                      //   ),
+                      // );
                     }
                   } catch (e) {
                     if (context.mounted) {

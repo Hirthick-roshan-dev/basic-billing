@@ -30,7 +30,9 @@ class _TaxSettingsFormState extends ConsumerState<TaxSettingsForm> {
     super.initState();
     _taxEnabled = widget.settings.taxEnabled;
     _taxPercentController = TextEditingController(
-      text: widget.settings.taxPercent > 0 ? CurrencyUtils.formatPlain(widget.settings.taxPercent) : '5.0',
+      text: widget.settings.taxPercent > 0
+          ? CurrencyUtils.formatPlain(widget.settings.taxPercent)
+          : '5.0',
     );
   }
 
@@ -40,9 +42,11 @@ class _TaxSettingsFormState extends ConsumerState<TaxSettingsForm> {
     if (_taxEnabled != widget.settings.taxEnabled) {
       _taxEnabled = widget.settings.taxEnabled;
     }
-    if (_taxPercentController.text != CurrencyUtils.formatPlain(widget.settings.taxPercent)) {
-      _taxPercentController.text =
-          widget.settings.taxPercent > 0 ? CurrencyUtils.formatPlain(widget.settings.taxPercent) : '5.0';
+    if (_taxPercentController.text !=
+        CurrencyUtils.formatPlain(widget.settings.taxPercent)) {
+      _taxPercentController.text = widget.settings.taxPercent > 0
+          ? CurrencyUtils.formatPlain(widget.settings.taxPercent)
+          : '5.0';
     }
   }
 
@@ -61,10 +65,9 @@ class _TaxSettingsFormState extends ConsumerState<TaxSettingsForm> {
           ? (double.tryParse(_taxPercentController.text.trim()) ?? 0.0)
           : 0.0;
 
-      await ref.read(settingsProvider.notifier).updateTaxSettings(
-            taxEnabled: _taxEnabled,
-            taxPercent: taxPercent,
-          );
+      await ref
+          .read(settingsProvider.notifier)
+          .updateTaxSettings(taxEnabled: _taxEnabled, taxPercent: taxPercent);
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -134,11 +137,15 @@ class _TaxSettingsFormState extends ConsumerState<TaxSettingsForm> {
                     children: [
                       Text(
                         'Enable Tax Calculation',
-                        style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w600),
+                        style: AppTextStyles.bodyMedium.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                       const SizedBox(height: 2),
                       Text(
-                        _taxEnabled ? 'Tax is applied to new bills' : 'No tax applied to new bills',
+                        _taxEnabled
+                            ? 'Tax is applied to new bills'
+                            : 'No tax applied to new bills',
                         style: AppTextStyles.bodySmall,
                       ),
                     ],
@@ -160,7 +167,9 @@ class _TaxSettingsFormState extends ConsumerState<TaxSettingsForm> {
                 controller: _taxPercentController,
                 label: 'Default Tax Rate (%)',
                 hintText: 'e.g. 5.0, 18.0',
-                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: true,
+                ),
                 inputFormatters: [
                   FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d{0,2}')),
                 ],

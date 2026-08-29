@@ -5,6 +5,7 @@ import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/utils/currency_utils.dart';
 import '../../model/product_model.dart';
 import '../../provider/cart_provider.dart';
+import '../../provider/offer_provider.dart';
 import '../../provider/product_provider.dart';
 import 'add_product_dialog.dart';
 
@@ -16,11 +17,25 @@ class ProductItem extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final cart = ref.watch(cartProvider);
-    final inCartItem = cart.items.where(
-      (item) => item.productName.toLowerCase() == product.name.toLowerCase(),
-    ).firstOrNull;
+    final inCartItem = cart.items
+        .where(
+          (item) =>
+              item.productName.toLowerCase() == product.name.toLowerCase(),
+        )
+        .firstOrNull;
 
     final inCartCount = inCartItem?.quantity ?? 0;
+
+    final isOffer =
+        ref
+            .watch(offerListProvider)
+            .valueOrNull
+            ?.any(
+              (p) =>
+                  p.name.toLowerCase().trim() ==
+                  product.name.toLowerCase().trim(),
+            ) ??
+        false;
 
     return Card(
       child: InkWell(
@@ -42,7 +57,9 @@ class ProductItem extends ConsumerWidget {
                 ),
                 child: Center(
                   child: Text(
-                    product.name.isNotEmpty ? product.name[0].toUpperCase() : 'P',
+                    product.name.isNotEmpty
+                        ? product.name[0].toUpperCase()
+                        : 'P',
                     style: const TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
@@ -60,7 +77,9 @@ class ProductItem extends ConsumerWidget {
                   children: [
                     Text(
                       product.name,
-                      style: AppTextStyles.bodyLarge.copyWith(fontWeight: FontWeight.w600),
+                      style: AppTextStyles.bodyLarge.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -79,7 +98,10 @@ class ProductItem extends ConsumerWidget {
               // Quantity in cart badge
               if (inCartCount > 0) ...[
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
                     color: AppColors.secondary,
                     borderRadius: BorderRadius.circular(12),
@@ -96,9 +118,32 @@ class ProductItem extends ConsumerWidget {
                 const SizedBox(width: 8),
               ],
 
+              // Offer list toggle button
+              IconButton(
+                icon: Icon(
+                  isOffer ? Icons.local_offer : Icons.local_offer_outlined,
+                  color: isOffer
+                      ? Colors.orange.shade700
+                      : AppColors.textSecondary,
+                  size: 20,
+                ),
+                tooltip: isOffer
+                    ? 'In Offer List (Click to remove)'
+                    : 'Add to Offer List',
+                onPressed: () async {
+                  final added = await ref
+                      .read(offerListProvider.notifier)
+                      .toggleOffer(product);
+                  if (context.mounted) {}
+                },
+              ),
+
               // Quick Add Button
               IconButton(
-                icon: const Icon(Icons.add_shopping_cart, color: AppColors.primary),
+                icon: const Icon(
+                  Icons.add_shopping_cart,
+                  color: AppColors.primary,
+                ),
                 tooltip: 'Add to Cart',
                 onPressed: () {
                   ref.read(cartProvider.notifier).addProduct(product);
@@ -107,7 +152,11 @@ class ProductItem extends ConsumerWidget {
 
               // More options menu (Edit, Delete)
               PopupMenuButton<String>(
-                icon: const Icon(Icons.more_vert, size: 20, color: AppColors.textSecondary),
+                icon: const Icon(
+                  Icons.more_vert,
+                  size: 20,
+                  color: AppColors.textSecondary,
+                ),
                 tooltip: 'Product Options',
                 onSelected: (value) async {
                   if (value == 'edit') {
@@ -117,14 +166,18 @@ class ProductItem extends ConsumerWidget {
                       context: context,
                       builder: (ctx) => AlertDialog(
                         title: const Text('Delete Product'),
-                        content: Text('Are you sure you want to delete "${product.name}"?'),
+                        content: Text(
+                          'Are you sure you want to delete "${product.name}"?',
+                        ),
                         actions: [
                           TextButton(
                             onPressed: () => Navigator.of(ctx).pop(false),
                             child: const Text('Cancel'),
                           ),
                           FilledButton(
-                            style: FilledButton.styleFrom(backgroundColor: AppColors.error),
+                            style: FilledButton.styleFrom(
+                              backgroundColor: AppColors.error,
+                            ),
                             onPressed: () => Navigator.of(ctx).pop(true),
                             child: const Text('Delete'),
                           ),
@@ -132,7 +185,9 @@ class ProductItem extends ConsumerWidget {
                       ),
                     );
                     if (confirm == true && product.id != null) {
-                      await ref.read(productListProvider.notifier).deleteProduct(product.id!);
+                      await ref
+                          .read(productListProvider.notifier)
+                          .deleteProduct(product.id!);
                     }
                   }
                 },
@@ -151,9 +206,16 @@ class ProductItem extends ConsumerWidget {
                     value: 'delete',
                     child: Row(
                       children: [
-                        Icon(Icons.delete_outline, size: 18, color: AppColors.error),
+                        Icon(
+                          Icons.delete_outline,
+                          size: 18,
+                          color: AppColors.error,
+                        ),
                         SizedBox(width: 8),
-                        Text('Delete', style: TextStyle(color: AppColors.error)),
+                        Text(
+                          'Delete',
+                          style: TextStyle(color: AppColors.error),
+                        ),
                       ],
                     ),
                   ),
