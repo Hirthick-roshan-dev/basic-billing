@@ -17,6 +17,8 @@ class _CustomerSectionState extends ConsumerState<CustomerSection> {
   late final TextEditingController _nameController;
   late final TextEditingController _phoneController;
   late final TextEditingController _vehicleController;
+  late final TextEditingController _modelController;
+  late final TextEditingController _kmController;
   late final TextEditingController _jobCardController;
 
   @override
@@ -26,6 +28,8 @@ class _CustomerSectionState extends ConsumerState<CustomerSection> {
     _nameController = TextEditingController(text: cart.customerName);
     _phoneController = TextEditingController(text: cart.customerPhone);
     _vehicleController = TextEditingController(text: cart.vehicleNumber);
+    _modelController = TextEditingController(text: cart.vehicleModel);
+    _kmController = TextEditingController(text: cart.km);
     _jobCardController = TextEditingController(text: cart.jobCardNumber);
   }
 
@@ -42,6 +46,12 @@ class _CustomerSectionState extends ConsumerState<CustomerSection> {
     if (_vehicleController.text != cart.vehicleNumber) {
       _vehicleController.text = cart.vehicleNumber;
     }
+    if (_modelController.text != cart.vehicleModel) {
+      _modelController.text = cart.vehicleModel;
+    }
+    if (_kmController.text != cart.km) {
+      _kmController.text = cart.km;
+    }
     if (_jobCardController.text != cart.jobCardNumber) {
       _jobCardController.text = cart.jobCardNumber;
     }
@@ -52,6 +62,8 @@ class _CustomerSectionState extends ConsumerState<CustomerSection> {
     _nameController.dispose();
     _phoneController.dispose();
     _vehicleController.dispose();
+    _modelController.dispose();
+    _kmController.dispose();
     _jobCardController.dispose();
     super.dispose();
   }
@@ -67,6 +79,12 @@ class _CustomerSectionState extends ConsumerState<CustomerSection> {
       }
       if (previous?.vehicleNumber != next.vehicleNumber && _vehicleController.text != next.vehicleNumber) {
         _vehicleController.text = next.vehicleNumber;
+      }
+      if (previous?.vehicleModel != next.vehicleModel && _modelController.text != next.vehicleModel) {
+        _modelController.text = next.vehicleModel;
+      }
+      if (previous?.km != next.km && _kmController.text != next.km) {
+        _kmController.text = next.km;
       }
       if (previous?.jobCardNumber != next.jobCardNumber && _jobCardController.text != next.jobCardNumber) {
         _jobCardController.text = next.jobCardNumber;
@@ -125,6 +143,35 @@ class _CustomerSectionState extends ConsumerState<CustomerSection> {
                 textCapitalization: TextCapitalization.characters,
                 onChanged: (val) {
                   ref.read(cartProvider.notifier).setVehicleNumber(val);
+                },
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: AppTextField(
+                controller: _modelController,
+                label: 'Vehicle Model (Optional)',
+                hintText: 'e.g. Swift / Creta / i20',
+                prefixIcon: const Icon(Icons.commute_outlined, size: 18),
+                textCapitalization: TextCapitalization.words,
+                onChanged: (val) {
+                  ref.read(cartProvider.notifier).setVehicleModel(val);
+                },
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 10),
+        Row(
+          children: [
+            Expanded(
+              child: AppTextField(
+                controller: _kmController,
+                label: 'KM Driven (Optional)',
+                hintText: 'e.g. 45000',
+                prefixIcon: const Icon(Icons.speed_outlined, size: 18),
+                onChanged: (val) {
+                  ref.read(cartProvider.notifier).setKm(val);
                 },
               ),
             ),

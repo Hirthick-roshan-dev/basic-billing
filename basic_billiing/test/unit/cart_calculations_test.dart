@@ -99,21 +99,31 @@ void main() {
       expect(state.payableTotal, 360.0);
     });
 
-    test('supports vehicleNumber and jobCardNumber in CartState copyWith', () {
+    test('supports vehicleNumber, vehicleModel, km, and jobCardNumber in CartState copyWith', () {
       const state = CartState(
         customerName: 'John',
         customerPhone: '9876543210',
         vehicleNumber: 'TN 38 AB 1234',
+        vehicleModel: 'Swift',
+        km: '45000',
         jobCardNumber: 'JC-1024',
       );
 
       expect(state.customerName, 'John');
       expect(state.customerPhone, '9876543210');
       expect(state.vehicleNumber, 'TN 38 AB 1234');
+      expect(state.vehicleModel, 'Swift');
+      expect(state.km, '45000');
       expect(state.jobCardNumber, 'JC-1024');
 
-      final updated = state.copyWith(vehicleNumber: 'KL 07 CD 5678');
+      final updated = state.copyWith(
+        vehicleNumber: 'KL 07 CD 5678',
+        vehicleModel: 'Creta',
+        km: '50000',
+      );
       expect(updated.vehicleNumber, 'KL 07 CD 5678');
+      expect(updated.vehicleModel, 'Creta');
+      expect(updated.km, '50000');
       expect(updated.jobCardNumber, 'JC-1024');
     });
   });

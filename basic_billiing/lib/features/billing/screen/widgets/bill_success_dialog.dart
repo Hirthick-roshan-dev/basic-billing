@@ -9,7 +9,7 @@ import '../../../../core/widgets/app_dialog.dart';
 import '../../model/bill_model.dart';
 import '../../provider/billing_provider.dart';
 
-class BillSuccessDialog extends ConsumerWidget {
+class BillSuccessDialog extends ConsumerStatefulWidget {
   final BillModel bill;
   final bool isEdit;
 
@@ -28,7 +28,17 @@ class BillSuccessDialog extends ConsumerWidget {
   }
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<BillSuccessDialog> createState() => _BillSuccessDialogState();
+}
+
+class _BillSuccessDialogState extends ConsumerState<BillSuccessDialog> {
+  bool _isOpeningPdf = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final bill = widget.bill;
+    final isEdit = widget.isEdit;
+
     return AppDialog(
       title: isEdit
           ? 'Bill Updated Successfully'
@@ -88,18 +98,39 @@ class BillSuccessDialog extends ConsumerWidget {
         AppButton(
           label: 'Open PDF',
           icon: Icons.picture_as_pdf,
+          isLoading: _isOpeningPdf,
           variant: AppButtonVariant.primary,
-          onPressed: () async {
-            final fileService = ref.read(fileServiceProvider);
-            final opened = await fileService.openInvoicePdf(bill.invoiceNumber);
-            if (!opened && context.mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Could not open PDF with default viewer'),
-                ),
-              );
-            }
-          },
+          onPressed: _isOpeningPdf
+              ? null
+              : () async {
+                  setState(() => _isOpeningPdf = true);
+                  try {
+                    final fileService = ref.read(fileServiceProvider);
+                    final opened =
+                        await fileService.openInvoicePdf(bill.invoiceNumber);
+                    if (!opened && context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content:
+                              Text('Could not open PDF with default viewer'),
+                        ),
+                      );
+                    }
+                  } catch (e) {
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('Error opening PDF: $e'),
+                          backgroundColor: AppColors.error,
+                        ),
+                      );
+                    }
+                  } finally {
+                    if (mounted) {
+                      setState(() => _isOpeningPdf = false);
+                    }
+                  }
+                },
         ),
         AppButton(
           label: 'Done',

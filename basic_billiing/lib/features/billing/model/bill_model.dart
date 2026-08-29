@@ -8,6 +8,8 @@ class BillModel {
   final String? customerName;
   final String? customerPhone;
   final String? vehicleNumber;
+  final String? vehicleModel;
+  final String? km;
   final String? jobCardNumber;
   final double subtotal;
   final double discountPercent;
@@ -26,6 +28,8 @@ class BillModel {
     this.customerName,
     this.customerPhone,
     this.vehicleNumber,
+    this.vehicleModel,
+    this.km,
     this.jobCardNumber,
     required this.subtotal,
     this.discountPercent = 0.0,
@@ -45,6 +49,8 @@ class BillModel {
       DatabaseConstants.colBillCustomerName: customerName,
       DatabaseConstants.colBillCustomerPhone: customerPhone,
       DatabaseConstants.colBillVehicleNumber: vehicleNumber,
+      DatabaseConstants.colBillVehicleModel: vehicleModel,
+      DatabaseConstants.colBillKm: km,
       DatabaseConstants.colBillJobCardNumber: jobCardNumber,
       DatabaseConstants.colBillSubtotal: CurrencyUtils.round(subtotal),
       DatabaseConstants.colBillDiscountPercent: CurrencyUtils.round(discountPercent),
@@ -69,6 +75,8 @@ class BillModel {
       customerName: map[DatabaseConstants.colBillCustomerName] as String?,
       customerPhone: map[DatabaseConstants.colBillCustomerPhone] as String?,
       vehicleNumber: map[DatabaseConstants.colBillVehicleNumber] as String?,
+      vehicleModel: map[DatabaseConstants.colBillVehicleModel] as String?,
+      km: map[DatabaseConstants.colBillKm] as String?,
       jobCardNumber: map[DatabaseConstants.colBillJobCardNumber] as String?,
       subtotal: CurrencyUtils.round((map[DatabaseConstants.colBillSubtotal] as num).toDouble()),
       discountPercent: CurrencyUtils.round((map[DatabaseConstants.colBillDiscountPercent] as num?)?.toDouble() ?? 0.0),
@@ -91,6 +99,8 @@ class BillModel {
     String? customerName,
     String? customerPhone,
     String? vehicleNumber,
+    String? vehicleModel,
+    String? km,
     String? jobCardNumber,
     double? subtotal,
     double? discountPercent,
@@ -109,6 +119,8 @@ class BillModel {
       customerName: customerName ?? this.customerName,
       customerPhone: customerPhone ?? this.customerPhone,
       vehicleNumber: vehicleNumber ?? this.vehicleNumber,
+      vehicleModel: vehicleModel ?? this.vehicleModel,
+      km: km ?? this.km,
       jobCardNumber: jobCardNumber ?? this.jobCardNumber,
       subtotal: subtotal != null ? CurrencyUtils.round(subtotal) : this.subtotal,
       discountPercent: discountPercent != null ? CurrencyUtils.round(discountPercent) : this.discountPercent,

@@ -24,6 +24,8 @@ class DatabaseMigrations {
         ${DatabaseConstants.colBillCustomerName} TEXT,
         ${DatabaseConstants.colBillCustomerPhone} TEXT,
         ${DatabaseConstants.colBillVehicleNumber} TEXT,
+        ${DatabaseConstants.colBillVehicleModel} TEXT,
+        ${DatabaseConstants.colBillKm} TEXT,
         ${DatabaseConstants.colBillJobCardNumber} TEXT,
         ${DatabaseConstants.colBillSubtotal} REAL NOT NULL,
         ${DatabaseConstants.colBillDiscountPercent} REAL DEFAULT 0,
@@ -114,6 +116,20 @@ class DatabaseMigrations {
       try {
         await db.execute(
           'ALTER TABLE ${DatabaseConstants.tableBills} ADD COLUMN ${DatabaseConstants.colBillJobCardNumber} TEXT',
+        );
+      } catch (_) {}
+    }
+
+    if (oldVersion < 4) {
+      // Add vehicle_model and km columns to bills table (nullable so existing data is safe)
+      try {
+        await db.execute(
+          'ALTER TABLE ${DatabaseConstants.tableBills} ADD COLUMN ${DatabaseConstants.colBillVehicleModel} TEXT',
+        );
+      } catch (_) {}
+      try {
+        await db.execute(
+          'ALTER TABLE ${DatabaseConstants.tableBills} ADD COLUMN ${DatabaseConstants.colBillKm} TEXT',
         );
       } catch (_) {}
     }

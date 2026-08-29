@@ -81,6 +81,8 @@ void main() {
         customerName: 'John Doe',
         customerPhone: '9876543210',
         vehicleNumber: 'TN 38 AB 1234',
+        vehicleModel: 'Swift',
+        km: '45000',
         jobCardNumber: 'JC-1024',
         subtotal: 100.0,
         discountPercent: 10.0,
@@ -105,6 +107,8 @@ void main() {
       expect(saved.items.length, 1);
       expect(saved.items.first.productName, 'Widget A');
       expect(saved.vehicleNumber, 'TN 38 AB 1234');
+      expect(saved.vehicleModel, 'Swift');
+      expect(saved.km, '45000');
       expect(saved.jobCardNumber, 'JC-1024');
 
       // Verify sequence increments for next bill on same date
@@ -116,6 +120,8 @@ void main() {
       expect(retrieved, isNotNull);
       expect(retrieved!.customerName, 'John Doe');
       expect(retrieved.vehicleNumber, 'TN 38 AB 1234');
+      expect(retrieved.vehicleModel, 'Swift');
+      expect(retrieved.km, '45000');
       expect(retrieved.jobCardNumber, 'JC-1024');
       expect(retrieved.items.length, 1);
       expect(retrieved.items.first.totalPrice, 100.0);
@@ -127,6 +133,8 @@ void main() {
         invoiceNumber: 'INV-20260826-0001',
         customerName: 'Alice',
         vehicleNumber: 'TN 38 AB 1234',
+        vehicleModel: 'Swift',
+        km: '45000',
         jobCardNumber: 'JC-1024',
         subtotal: 50.0,
         totalAmount: 50.0,
@@ -140,6 +148,8 @@ void main() {
       // Update bill with new items and updated vehicle number
       final updatedBill = saved.copyWith(
         vehicleNumber: 'TN 38 CD 5678',
+        vehicleModel: 'Creta',
+        km: '52000',
         subtotal: 80.0,
         totalAmount: 80.0,
         updatedAt: DateTime.now(),
@@ -152,11 +162,15 @@ void main() {
       final updated = await billingRepo.updateBill(updatedBill, newItems);
       expect(updated.items.length, 2);
       expect(updated.vehicleNumber, 'TN 38 CD 5678');
+      expect(updated.vehicleModel, 'Creta');
+      expect(updated.km, '52000');
 
       final reloaded = await billingRepo.getBillWithItems(saved.id!);
       expect(reloaded!.items.length, 2);
       expect(reloaded.totalAmount, 80.0);
       expect(reloaded.vehicleNumber, 'TN 38 CD 5678');
+      expect(reloaded.vehicleModel, 'Creta');
+      expect(reloaded.km, '52000');
       expect(reloaded.jobCardNumber, 'JC-1024');
     });
 

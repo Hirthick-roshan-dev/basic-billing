@@ -2,7 +2,7 @@ class DatabaseConstants {
   DatabaseConstants._();
 
   static const String databaseName = 'billing_app.db';
-  static const int databaseVersion = 3;
+  static const int databaseVersion = 4;
 
   // Tables
   static const String tableProducts = 'products';
@@ -23,6 +23,8 @@ class DatabaseConstants {
   static const String colBillCustomerName = 'customer_name';
   static const String colBillCustomerPhone = 'customer_phone';
   static const String colBillVehicleNumber = 'vehicle_number';
+  static const String colBillVehicleModel = 'vehicle_model';
+  static const String colBillKm = 'km';
   static const String colBillJobCardNumber = 'job_card_no';
   static const String colBillSubtotal = 'subtotal';
   static const String colBillDiscountPercent = 'discount_percent';

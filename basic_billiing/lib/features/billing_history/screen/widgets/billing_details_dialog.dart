@@ -46,6 +46,7 @@ class BillingDetailsDialog extends ConsumerStatefulWidget {
 class _BillingDetailsDialogState extends ConsumerState<BillingDetailsDialog> {
   BillModel? _bill;
   bool _isLoading = true;
+  bool _isPdfOpening = false;
   String? _error;
 
   @override
@@ -153,6 +154,16 @@ class _BillingDetailsDialogState extends ConsumerState<BillingDetailsDialog> {
                         ),
                       ),
                     ],
+                    if (bill.vehicleModel?.isNotEmpty == true) ...[
+                      const SizedBox(height: 2),
+                      Text(
+                        'Model: ${bill.vehicleModel}',
+                        style: AppTextStyles.bodySmall.copyWith(
+                          fontWeight: FontWeight.w500,
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+                    ],
                   ],
                 ),
                 Column(
@@ -168,6 +179,16 @@ class _BillingDetailsDialogState extends ConsumerState<BillingDetailsDialog> {
                       AppDateUtils.formatTime(bill.createdAt),
                       style: AppTextStyles.bodySmall,
                     ),
+                    if (bill.km?.isNotEmpty == true) ...[
+                      const SizedBox(height: 2),
+                      Text(
+                        'KM: ${bill.km}',
+                        style: AppTextStyles.bodySmall.copyWith(
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+                    ],
                     if (bill.jobCardNumber?.isNotEmpty == true) ...[
                       const SizedBox(height: 2),
                       Text(
@@ -361,45 +382,56 @@ class _BillingDetailsDialogState extends ConsumerState<BillingDetailsDialog> {
         AppButton(
           label: 'Open PDF',
           icon: Icons.picture_as_pdf,
+          isLoading: _isPdfOpening,
           variant: AppButtonVariant.primary,
-          onPressed: () async {
-            try {
-              final fileService = ref.read(fileServiceProvider);
-              var file = await fileService.getInvoicePdf(bill.invoiceNumber);
-              if (file == null || !await file.exists()) {
-                // Generate and save if not exists
-                final settings = await ref
-                    .read(settingsRepositoryProvider)
-                    .getSettings();
-                final pdfService = ref.read(pdfServiceProvider);
-                final bytes = await pdfService.generateInvoicePdf(
-                  bill: bill,
-                  settings: settings,
-                );
-                await fileService.saveInvoicePdf(
-                  invoiceNumber: bill.invoiceNumber,
-                  bytes: bytes,
-                );
-              }
-              final opened = await fileService.openInvoicePdf(bill.invoiceNumber);
-              if (!opened && context.mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Could not open PDF with default viewer'),
-                  ),
-                );
-              }
-            } catch (e) {
-              if (context.mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text('Error generating PDF: $e'),
-                    backgroundColor: AppColors.error,
-                  ),
-                );
-              }
-            }
-          },
+          onPressed: _isPdfOpening
+              ? null
+              : () async {
+                  setState(() => _isPdfOpening = true);
+                  try {
+                    final fileService = ref.read(fileServiceProvider);
+                    var file =
+                        await fileService.getInvoicePdf(bill.invoiceNumber);
+                    if (file == null || !await file.exists()) {
+                      // Generate and save if not exists
+                      final settings = await ref
+                          .read(settingsRepositoryProvider)
+                          .getSettings();
+                      final pdfService = ref.read(pdfServiceProvider);
+                      final bytes = await pdfService.generateInvoicePdf(
+                        bill: bill,
+                        settings: settings,
+                      );
+                      await fileService.saveInvoicePdf(
+                        invoiceNumber: bill.invoiceNumber,
+                        bytes: bytes,
+                      );
+                    }
+                    final opened =
+                        await fileService.openInvoicePdf(bill.invoiceNumber);
+                    if (!opened && context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content:
+                              Text('Could not open PDF with default viewer'),
+                        ),
+                      );
+                    }
+                  } catch (e) {
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('Error generating PDF: $e'),
+                          backgroundColor: AppColors.error,
+                        ),
+                      );
+                    }
+                  } finally {
+                    if (mounted) {
+                      setState(() => _isPdfOpening = false);
+                    }
+                  }
+                },
         ),
       ],
     );

@@ -76,6 +76,8 @@ class PdfPreviewScreen extends ConsumerWidget {
       customerName: 'Roshan Kumar',
       customerPhone: '+91 98765 43210',
       vehicleNumber: 'TN 38 AB 1234',
+      vehicleModel: 'Maruti Suzuki Swift',
+      km: '45,200 KM',
       jobCardNumber: 'JC-1024',
       subtotal: subtotal,
       discountPercent: 7.22,

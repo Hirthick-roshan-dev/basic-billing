@@ -10,6 +10,8 @@ class CartState {
   final String customerName;
   final String customerPhone;
   final String vehicleNumber;
+  final String vehicleModel;
+  final String km;
   final String jobCardNumber;
   final double discountAmount;
   final bool taxEnabled;
@@ -22,6 +24,8 @@ class CartState {
     this.customerName = '',
     this.customerPhone = '',
     this.vehicleNumber = '',
+    this.vehicleModel = '',
+    this.km = '',
     this.jobCardNumber = '',
     this.discountAmount = 0.0,
     this.taxEnabled = false,
@@ -87,6 +91,8 @@ class CartState {
     String? customerName,
     String? customerPhone,
     String? vehicleNumber,
+    String? vehicleModel,
+    String? km,
     String? jobCardNumber,
     double? discountAmount,
     bool? taxEnabled,
@@ -100,6 +106,8 @@ class CartState {
       customerName: customerName ?? this.customerName,
       customerPhone: customerPhone ?? this.customerPhone,
       vehicleNumber: vehicleNumber ?? this.vehicleNumber,
+      vehicleModel: vehicleModel ?? this.vehicleModel,
+      km: km ?? this.km,
       jobCardNumber: jobCardNumber ?? this.jobCardNumber,
       discountAmount: discountAmount != null ? CurrencyUtils.round(discountAmount) : this.discountAmount,
       taxEnabled: taxEnabled ?? this.taxEnabled,
@@ -204,6 +212,14 @@ class CartNotifier extends Notifier<CartState> {
     state = state.copyWith(vehicleNumber: vehicleNumber);
   }
 
+  void setVehicleModel(String vehicleModel) {
+    state = state.copyWith(vehicleModel: vehicleModel);
+  }
+
+  void setKm(String km) {
+    state = state.copyWith(km: km);
+  }
+
   void setJobCardNumber(String jobCardNumber) {
     state = state.copyWith(jobCardNumber: jobCardNumber);
   }
@@ -253,6 +269,8 @@ class CartNotifier extends Notifier<CartState> {
       customerName: bill.customerName ?? '',
       customerPhone: bill.customerPhone ?? '',
       vehicleNumber: bill.vehicleNumber ?? '',
+      vehicleModel: bill.vehicleModel ?? '',
+      km: bill.km ?? '',
       jobCardNumber: bill.jobCardNumber ?? '',
       discountAmount: bill.discountAmount,
       taxEnabled: bill.taxPercent > 0 || bill.taxAmount > 0,
