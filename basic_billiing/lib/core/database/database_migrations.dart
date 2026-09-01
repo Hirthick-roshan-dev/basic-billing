@@ -70,12 +70,33 @@ class DatabaseMigrations {
     await db.execute('''
       CREATE TABLE ${DatabaseConstants.tableOfferProducts} (
         ${DatabaseConstants.colOfferId} INTEGER PRIMARY KEY AUTOINCREMENT,
+        ${DatabaseConstants.colOfferGroup} INTEGER NOT NULL DEFAULT 1,
         ${DatabaseConstants.colOfferProductId} INTEGER,
         ${DatabaseConstants.colOfferProductName} TEXT NOT NULL,
         ${DatabaseConstants.colOfferProductPrice} REAL NOT NULL,
-        ${DatabaseConstants.colOfferCreatedAt} TEXT NOT NULL
+        ${DatabaseConstants.colOfferCreatedAt} TEXT NOT NULL,
+        UNIQUE(${DatabaseConstants.colOfferGroup}, ${DatabaseConstants.colOfferProductName})
       )
     ''');
+
+    // Offer Groups Table
+    await db.execute('''
+      CREATE TABLE ${DatabaseConstants.tableOfferGroups} (
+        ${DatabaseConstants.colOfferGroupId} INTEGER PRIMARY KEY,
+        ${DatabaseConstants.colOfferGroupName} TEXT NOT NULL,
+        ${DatabaseConstants.colOfferGroupTotalPrice} REAL NOT NULL DEFAULT 0.0,
+        ${DatabaseConstants.colOfferGroupUpdatedAt} TEXT
+      )
+    ''');
+
+    for (int g = 1; g <= 4; g++) {
+      await db.insert(DatabaseConstants.tableOfferGroups, {
+        DatabaseConstants.colOfferGroupId: g,
+        DatabaseConstants.colOfferGroupName: 'Offer $g',
+        DatabaseConstants.colOfferGroupTotalPrice: 0.0,
+        DatabaseConstants.colOfferGroupUpdatedAt: DateTime.now().toIso8601String(),
+      });
+    }
 
     // Seed default settings for BROTHER'S AUTO CARE
     await db.insert(DatabaseConstants.tableBusinessSettings, {
@@ -161,12 +182,49 @@ class DatabaseMigrations {
         await db.execute('''
           CREATE TABLE IF NOT EXISTS ${DatabaseConstants.tableOfferProducts} (
             ${DatabaseConstants.colOfferId} INTEGER PRIMARY KEY AUTOINCREMENT,
+            ${DatabaseConstants.colOfferGroup} INTEGER NOT NULL DEFAULT 1,
             ${DatabaseConstants.colOfferProductId} INTEGER,
             ${DatabaseConstants.colOfferProductName} TEXT NOT NULL,
             ${DatabaseConstants.colOfferProductPrice} REAL NOT NULL,
-            ${DatabaseConstants.colOfferCreatedAt} TEXT NOT NULL
+            ${DatabaseConstants.colOfferCreatedAt} TEXT NOT NULL,
+            UNIQUE(${DatabaseConstants.colOfferGroup}, ${DatabaseConstants.colOfferProductName})
           )
         ''');
+      } catch (_) {}
+    }
+
+    if (oldVersion < 7) {
+      // Add offer_group column to offer_products if upgrading from v6
+      try {
+        await db.execute(
+          'ALTER TABLE ${DatabaseConstants.tableOfferProducts} ADD COLUMN ${DatabaseConstants.colOfferGroup} INTEGER DEFAULT 1',
+        );
+      } catch (_) {}
+    }
+
+    if (oldVersion < 8) {
+      // Add offer_groups table if upgrading from v7
+      try {
+        await db.execute('''
+          CREATE TABLE IF NOT EXISTS ${DatabaseConstants.tableOfferGroups} (
+            ${DatabaseConstants.colOfferGroupId} INTEGER PRIMARY KEY,
+            ${DatabaseConstants.colOfferGroupName} TEXT NOT NULL,
+            ${DatabaseConstants.colOfferGroupTotalPrice} REAL NOT NULL DEFAULT 0.0,
+            ${DatabaseConstants.colOfferGroupUpdatedAt} TEXT
+          )
+        ''');
+        for (int g = 1; g <= 4; g++) {
+          await db.insert(
+            DatabaseConstants.tableOfferGroups,
+            {
+              DatabaseConstants.colOfferGroupId: g,
+              DatabaseConstants.colOfferGroupName: 'Offer $g',
+              DatabaseConstants.colOfferGroupTotalPrice: 0.0,
+              DatabaseConstants.colOfferGroupUpdatedAt: DateTime.now().toIso8601String(),
+            },
+            conflictAlgorithm: ConflictAlgorithm.ignore,
+          );
+        }
       } catch (_) {}
     }
   }

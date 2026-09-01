@@ -10,11 +10,7 @@ class BillingCard extends StatelessWidget {
   final BillModel bill;
   final VoidCallback? onNavigateToBilling;
 
-  const BillingCard({
-    super.key,
-    required this.bill,
-    this.onNavigateToBilling,
-  });
+  const BillingCard({super.key, required this.bill, this.onNavigateToBilling});
 
   @override
   Widget build(BuildContext context) {
@@ -42,7 +38,11 @@ class BillingCard extends StatelessWidget {
                   color: AppColors.primaryLight.withValues(alpha: 0.3),
                   borderRadius: BorderRadius.circular(10),
                 ),
-                child: const Icon(Icons.receipt_long, color: AppColors.primary, size: 24),
+                child: const Icon(
+                  Icons.receipt_long,
+                  color: AppColors.primary,
+                  size: 24,
+                ),
               ),
               const SizedBox(width: 16),
 
@@ -62,7 +62,10 @@ class BillingCard extends StatelessWidget {
                         ),
                         const SizedBox(width: 8),
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 6,
+                            vertical: 2,
+                          ),
                           decoration: BoxDecoration(
                             color: bill.paymentType.toUpperCase() == 'UPI'
                                 ? Colors.deepPurple.withValues(alpha: 0.1)
@@ -102,22 +105,22 @@ class BillingCard extends StatelessWidget {
                           ),
                         ),
                         if (bill.isTotalEdited) ...[
-                          const SizedBox(width: 6),
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                            decoration: BoxDecoration(
-                              color: AppColors.warningLight,
-                              borderRadius: BorderRadius.circular(4),
-                            ),
-                            child: const Text(
-                              'Edited',
-                              style: TextStyle(
-                                fontSize: 10,
-                                fontWeight: FontWeight.bold,
-                                color: AppColors.warning,
-                              ),
-                            ),
-                          ),
+                          // const SizedBox(width: 6),
+                          // Container(
+                          //   padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                          //   decoration: BoxDecoration(
+                          //     color: AppColors.warningLight,
+                          //     borderRadius: BorderRadius.circular(4),
+                          //   ),
+                          //   child: const Text(
+                          //     'Edited',
+                          //     style: TextStyle(
+                          //       fontSize: 10,
+                          //       fontWeight: FontWeight.bold,
+                          //       color: AppColors.warning,
+                          //     ),
+                          //   ),
+                          // ),
                         ],
                       ],
                     ),
@@ -131,12 +134,17 @@ class BillingCard extends StatelessWidget {
                         fontWeight: FontWeight.w500,
                       ),
                     ),
-                    if (bill.vehicleNumber?.isNotEmpty == true || bill.jobCardNumber?.isNotEmpty == true) ...[
+                    if (bill.vehicleNumber?.isNotEmpty == true ||
+                        bill.jobCardNumber?.isNotEmpty == true) ...[
                       const SizedBox(height: 3),
                       Row(
                         children: [
                           if (bill.vehicleNumber?.isNotEmpty == true) ...[
-                            const Icon(Icons.directions_car_outlined, size: 13, color: AppColors.primary),
+                            const Icon(
+                              Icons.directions_car_outlined,
+                              size: 13,
+                              color: AppColors.primary,
+                            ),
                             const SizedBox(width: 3),
                             Text(
                               bill.vehicleNumber!,
@@ -147,13 +155,24 @@ class BillingCard extends StatelessWidget {
                               ),
                             ),
                           ],
-                          if (bill.vehicleNumber?.isNotEmpty == true && bill.jobCardNumber?.isNotEmpty == true)
+                          if (bill.vehicleNumber?.isNotEmpty == true &&
+                              bill.jobCardNumber?.isNotEmpty == true)
                             const Padding(
                               padding: EdgeInsets.symmetric(horizontal: 6),
-                              child: Text('•', style: TextStyle(color: AppColors.textTertiary, fontSize: 11)),
+                              child: Text(
+                                '•',
+                                style: TextStyle(
+                                  color: AppColors.textTertiary,
+                                  fontSize: 11,
+                                ),
+                              ),
                             ),
                           if (bill.jobCardNumber?.isNotEmpty == true) ...[
-                            const Icon(Icons.assignment_outlined, size: 13, color: AppColors.textSecondary),
+                            const Icon(
+                              Icons.assignment_outlined,
+                              size: 13,
+                              color: AppColors.textSecondary,
+                            ),
                             const SizedBox(width: 3),
                             Text(
                               bill.jobCardNumber!,
@@ -179,12 +198,16 @@ class BillingCard extends StatelessWidget {
                   children: [
                     Text(
                       AppDateUtils.formatInvoiceDate(bill.createdAt),
-                      style: AppTextStyles.bodySmall.copyWith(fontWeight: FontWeight.w600),
+                      style: AppTextStyles.bodySmall.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                     const SizedBox(height: 2),
                     Text(
                       AppDateUtils.formatTime(bill.createdAt),
-                      style: AppTextStyles.bodySmall.copyWith(color: AppColors.textTertiary),
+                      style: AppTextStyles.bodySmall.copyWith(
+                        color: AppColors.textTertiary,
+                      ),
                     ),
                   ],
                 ),
@@ -204,7 +227,10 @@ class BillingCard extends StatelessWidget {
                   const SizedBox(height: 2),
                   const Text(
                     'View details →',
-                    style: TextStyle(fontSize: 11, color: AppColors.textSecondary),
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: AppColors.textSecondary,
+                    ),
                   ),
                 ],
               ),

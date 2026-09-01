@@ -5,7 +5,6 @@ import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/widgets/loading_widget.dart';
 import '../provider/settings_provider.dart';
 import 'widgets/business_information_form.dart';
-import 'widgets/invoice_preview_card.dart';
 import 'widgets/tax_settings_form.dart';
 
 class SettingsScreen extends ConsumerWidget {

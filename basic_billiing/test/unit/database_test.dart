@@ -392,7 +392,7 @@ void main() {
       await v4Db.close();
     });
 
-    test('Offer products CRUD operations work properly', () async {
+    test('Offer products CRUD operations work properly across 3 offer groups', () async {
       final p1 = ProductModel(
         id: 10,
         name: 'Oil Filter',
@@ -405,28 +405,71 @@ void main() {
         price: 850.0,
         createdAt: DateTime.now(),
       );
+      final p3 = ProductModel(
+        id: 12,
+        name: 'Engine Oil',
+        price: 1200.0,
+        createdAt: DateTime.now(),
+      );
 
-      // 1. Add offer products
-      await offerRepo.addOfferProduct(p1);
-      await offerRepo.addOfferProduct(p2);
+      // 1. Add offer products to distinct groups (Offer 1, Offer 2, Offer 3)
+      await offerRepo.addOfferProduct(p1, offerGroup: 1);
+      await offerRepo.addOfferProduct(p2, offerGroup: 1);
+      await offerRepo.addOfferProduct(p2, offerGroup: 2); // p2 in both Offer 1 and Offer 2
+      await offerRepo.addOfferProduct(p3, offerGroup: 3);
 
-      // 2. Verify list
-      final offers = await offerRepo.getOfferProducts();
-      expect(offers.length, 2);
-      expect(await offerRepo.isOfferProduct('Oil Filter'), isTrue);
-      expect(await offerRepo.isOfferProduct('Brake Pads'), isTrue);
-      expect(await offerRepo.isOfferProduct('Air Filter'), isFalse);
+      // 2. Verify lists per group
+      final offers1 = await offerRepo.getOfferProducts(offerGroup: 1);
+      expect(offers1.length, 2);
+      expect(await offerRepo.isOfferProduct('Oil Filter', offerGroup: 1), isTrue);
+      expect(await offerRepo.isOfferProduct('Brake Pads', offerGroup: 1), isTrue);
+      expect(await offerRepo.isOfferProduct('Engine Oil', offerGroup: 1), isFalse);
 
-      // 3. Remove offer product
-      await offerRepo.removeOfferProduct('Oil Filter');
-      final updatedOffers = await offerRepo.getOfferProducts();
-      expect(updatedOffers.length, 1);
-      expect(updatedOffers.first.name, 'Brake Pads');
+      final offers2 = await offerRepo.getOfferProducts(offerGroup: 2);
+      expect(offers2.length, 1);
+      expect(offers2.first.name, 'Brake Pads');
 
-      // 4. Clear all offers
-      await offerRepo.clearOfferProducts();
-      final emptyOffers = await offerRepo.getOfferProducts();
-      expect(emptyOffers.isEmpty, isTrue);
+      final offers3 = await offerRepo.getOfferProducts(offerGroup: 3);
+      expect(offers3.length, 1);
+      expect(offers3.first.name, 'Engine Oil');
+
+      // 3. Verify getOfferGroupsForProduct
+      final groupsForBrakePads = await offerRepo.getOfferGroupsForProduct('Brake Pads');
+      expect(groupsForBrakePads.contains(1), isTrue);
+      expect(groupsForBrakePads.contains(2), isTrue);
+      expect(groupsForBrakePads.contains(3), isFalse);
+
+      // 4. Remove offer product from specific group
+      await offerRepo.removeOfferProduct('Brake Pads', offerGroup: 1);
+      final updatedOffers1 = await offerRepo.getOfferProducts(offerGroup: 1);
+      expect(updatedOffers1.length, 1);
+      expect(updatedOffers1.first.name, 'Oil Filter');
+      // Offer 2 still has Brake Pads
+      expect(await offerRepo.isOfferProduct('Brake Pads', offerGroup: 2), isTrue);
+
+      // 5. Clear all offers in group 2
+      await offerRepo.clearOfferProducts(offerGroup: 2);
+      final emptyOffers2 = await offerRepo.getOfferProducts(offerGroup: 2);
+      expect(emptyOffers2.isEmpty, isTrue);
+    });
+
+    test('Offer products are listed in insertion order (first added first, last added last)', () async {
+      await offerRepo.clearOfferProducts(offerGroup: 4);
+
+      final pZ = ProductModel(id: 101, name: 'Zebra Product', price: 100.0, createdAt: DateTime.now());
+      final pA = ProductModel(id: 102, name: 'Alpha Product', price: 200.0, createdAt: DateTime.now());
+      final pM = ProductModel(id: 103, name: 'Middle Product', price: 300.0, createdAt: DateTime.now());
+
+      // Insert in order: Z -> A -> M
+      await offerRepo.addOfferProduct(pZ, offerGroup: 4);
+      await offerRepo.addOfferProduct(pA, offerGroup: 4);
+      await offerRepo.addOfferProduct(pM, offerGroup: 4);
+
+      final products = await offerRepo.getOfferProducts(offerGroup: 4);
+      expect(products.length, 3);
+      expect(products[0].name, 'Zebra Product');
+      expect(products[1].name, 'Alpha Product');
+      expect(products[2].name, 'Middle Product');
     });
 
     test('Migration from v5 to v6 safely creates offer_products table', () async {
@@ -463,6 +506,105 @@ void main() {
       expect(offers.first.name, 'Coolant');
 
       await v5Db.close();
+    });
+
+    test('Migration from v6 to v7 safely adds offer_group column to offer_products table', () async {
+      final v6Db = await databaseFactory.openDatabase(
+        inMemoryDatabasePath,
+        options: OpenDatabaseOptions(
+          version: 6,
+          onCreate: (db, version) async {
+            await db.execute('''
+              CREATE TABLE offer_products (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                product_id INTEGER,
+                product_name TEXT NOT NULL UNIQUE,
+                product_price REAL NOT NULL,
+                created_at TEXT NOT NULL
+              )
+            ''');
+            await db.insert('offer_products', {
+              'product_name': 'Legacy Offer Product',
+              'product_price': 150.0,
+              'created_at': DateTime.now().toIso8601String(),
+            });
+          },
+        ),
+      );
+
+      // Upgrade from v6 to v7
+      await DatabaseMigrations.onUpgrade(v6Db, 6, 7);
+
+      // Verify existing items default to offer_group 1
+      final v7OfferRepo = OfferRepository(db: v6Db);
+      final offersGroup1 = await v7OfferRepo.getOfferProducts(offerGroup: 1);
+      expect(offersGroup1.length, 1);
+      expect(offersGroup1.first.name, 'Legacy Offer Product');
+
+      // Add item to offer group 2 on upgraded database
+      await v7OfferRepo.addOfferProduct(
+        ProductModel(name: 'New V7 Product', price: 500.0, createdAt: DateTime.now()),
+        offerGroup: 2,
+      );
+
+      final offersGroup2 = await v7OfferRepo.getOfferProducts(offerGroup: 2);
+      expect(offersGroup2.length, 1);
+      expect(offersGroup2.first.name, 'New V7 Product');
+
+      await v6Db.close();
+    });
+
+    test('Offer group total prices get and set correctly', () async {
+      // Default should be 0.0
+      final defaultPrice = await offerRepo.getOfferGroupTotalPrice(1);
+      expect(defaultPrice, 0.0);
+
+      // Set total price for Offer 1 and Offer 2
+      await offerRepo.setOfferGroupTotalPrice(1, 999.0);
+      await offerRepo.setOfferGroupTotalPrice(2, 1499.5);
+
+      expect(await offerRepo.getOfferGroupTotalPrice(1), 999.0);
+      expect(await offerRepo.getOfferGroupTotalPrice(2), 1499.5);
+      expect(await offerRepo.getOfferGroupTotalPrice(3), 0.0);
+      expect(await offerRepo.getOfferGroupTotalPrice(4), 0.0);
+    });
+
+    test('Migration from v7 to v8 safely creates offer_groups table with seeded defaults', () async {
+      final v7Db = await databaseFactory.openDatabase(
+        inMemoryDatabasePath,
+        options: OpenDatabaseOptions(
+          version: 7,
+          onCreate: (db, version) async {
+            await db.execute('''
+              CREATE TABLE offer_products (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                offer_group INTEGER NOT NULL DEFAULT 1,
+                product_id INTEGER,
+                product_name TEXT NOT NULL,
+                product_price REAL NOT NULL,
+                created_at TEXT NOT NULL,
+                UNIQUE(offer_group, product_name)
+              )
+            ''');
+          },
+        ),
+      );
+
+      // Upgrade from v7 to v8
+      await DatabaseMigrations.onUpgrade(v7Db, 7, 8);
+
+      final v8OfferRepo = OfferRepository(db: v7Db);
+      // Verify default seeded offer groups
+      expect(await v8OfferRepo.getOfferGroupTotalPrice(1), 0.0);
+      expect(await v8OfferRepo.getOfferGroupTotalPrice(2), 0.0);
+      expect(await v8OfferRepo.getOfferGroupTotalPrice(3), 0.0);
+      expect(await v8OfferRepo.getOfferGroupTotalPrice(4), 0.0);
+
+      // Verify updating offer total price works on upgraded db
+      await v8OfferRepo.setOfferGroupTotalPrice(1, 799.0);
+      expect(await v8OfferRepo.getOfferGroupTotalPrice(1), 799.0);
+
+      await v7Db.close();
     });
   });
 }

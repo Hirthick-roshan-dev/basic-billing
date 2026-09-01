@@ -14,6 +14,83 @@ class ProductItem extends ConsumerWidget {
 
   const ProductItem({super.key, required this.product});
 
+  void _showOfferSelectionDialog(BuildContext context, WidgetRef ref) {
+    showDialog(
+      context: context,
+      builder: (ctx) {
+        return Consumer(
+          builder: (context, modalRef, _) {
+            final activeGroups = modalRef.watch(
+              offerGroupsForProductProvider(product.name),
+            );
+
+            return AlertDialog(
+              title: Row(
+                children: [
+                  const Icon(Icons.local_offer, color: AppColors.primary, size: 22),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'Assign to Offers',
+                      style: AppTextStyles.subsectionTitle,
+                    ),
+                  ),
+                ],
+              ),
+              content: SizedBox(
+                width: 320,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      product.name,
+                      style: AppTextStyles.bodyMedium.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    Text(
+                      CurrencyUtils.format(product.price),
+                      style: AppTextStyles.bodySmall.copyWith(
+                        color: AppColors.primary,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    const Divider(height: 1),
+                    for (int group = 1; group <= 4; group++)
+                      CheckboxListTile(
+                        dense: true,
+                        contentPadding: EdgeInsets.zero,
+                        title: Text(
+                          'Offer $group',
+                          style: AppTextStyles.bodyMedium.copyWith(
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        value: activeGroups.contains(group),
+                        activeColor: AppColors.primary,
+                        onChanged: (bool? checked) async {
+                          await modalRef
+                              .read(offerListFamilyProvider(group).notifier)
+                              .toggleOffer(product);
+                        },
+                      ),
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(ctx).pop(),
+                  child: const Text('Done'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final cart = ref.watch(cartProvider);
@@ -26,16 +103,10 @@ class ProductItem extends ConsumerWidget {
 
     final inCartCount = inCartItem?.quantity ?? 0;
 
-    final isOffer =
-        ref
-            .watch(offerListProvider)
-            .valueOrNull
-            ?.any(
-              (p) =>
-                  p.name.toLowerCase().trim() ==
-                  product.name.toLowerCase().trim(),
-            ) ??
-        false;
+    final activeOfferGroups = ref.watch(
+      offerGroupsForProductProvider(product.name),
+    );
+    final hasOffers = activeOfferGroups.isNotEmpty;
 
     return Card(
       child: InkWell(
@@ -121,20 +192,17 @@ class ProductItem extends ConsumerWidget {
               // Offer list toggle button
               IconButton(
                 icon: Icon(
-                  isOffer ? Icons.local_offer : Icons.local_offer_outlined,
-                  color: isOffer
+                  hasOffers ? Icons.local_offer : Icons.local_offer_outlined,
+                  color: hasOffers
                       ? Colors.orange.shade700
                       : AppColors.textSecondary,
                   size: 20,
                 ),
-                tooltip: isOffer
-                    ? 'In Offer List (Click to remove)'
-                    : 'Add to Offer List',
-                onPressed: () async {
-                  final added = await ref
-                      .read(offerListProvider.notifier)
-                      .toggleOffer(product);
-                  if (context.mounted) {}
+                tooltip: hasOffers
+                    ? 'In Offer ${activeOfferGroups.join(', ')} (Click to edit)'
+                    : 'Assign to Offers (1, 2, 3, 4)',
+                onPressed: () {
+                  _showOfferSelectionDialog(context, ref);
                 },
               ),
 

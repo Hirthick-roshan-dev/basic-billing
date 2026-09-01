@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:basic_billiing/features/billing/model/cart_item_model.dart';
+import 'package:basic_billiing/features/billing/model/product_model.dart';
 import 'package:basic_billiing/features/billing/provider/cart_provider.dart';
 
 void main() {
@@ -136,6 +137,34 @@ void main() {
 
       final cashState = upiState.copyWith(paymentType: 'Cash');
       expect(cashState.paymentType, 'Cash');
+    });
+
+    test('addOfferToCart adds all items with 0.0 price and sets total to defined offer price', () {
+      final notifier = CartNotifier();
+      // Initialize with empty state
+      notifier.state = const CartState();
+
+      final offerProducts = [
+        ProductModel(id: 1, name: 'Engine Oil', price: 450.0, createdAt: DateTime.now()),
+        ProductModel(id: 2, name: 'Oil Filter', price: 150.0, createdAt: DateTime.now()),
+        ProductModel(id: 3, name: 'General Service', price: 500.0, createdAt: DateTime.now()),
+      ];
+
+      notifier.addOfferToCart(
+        products: offerProducts,
+        offerTotalPrice: 899.0,
+      );
+
+      final state = notifier.state;
+      expect(state.items.length, 3);
+      for (final item in state.items) {
+        expect(item.unitPrice, 0.0);
+        expect(item.totalPrice, 0.0);
+      }
+      expect(state.subtotal, 0.0);
+      expect(state.isTotalEdited, isTrue);
+      expect(state.manualTotal, 899.0);
+      expect(state.payableTotal, 899.0);
     });
   });
 }

@@ -163,6 +163,50 @@ class CartNotifier extends Notifier<CartState> {
     }
   }
 
+  void addOfferToCart({
+    required List<ProductModel> products,
+    required double offerTotalPrice,
+  }) {
+    if (products.isEmpty) return;
+
+    final updatedList = List<CartItemModel>.from(state.items);
+
+    for (final product in products) {
+      final existingIndex = updatedList.indexWhere(
+        (item) => item.productName.toLowerCase() == product.name.toLowerCase(),
+      );
+
+      if (existingIndex >= 0) {
+        final existing = updatedList[existingIndex];
+        updatedList[existingIndex] = existing.copyWith(
+          unitPrice: 0.0,
+          quantity: existing.quantity + 1,
+        );
+      } else {
+        updatedList.add(
+          CartItemModel(
+            productId: product.id,
+            productName: product.name,
+            unitPrice: 0.0,
+            quantity: 1,
+          ),
+        );
+      }
+    }
+
+    final newManualTotal = (state.isTotalEdited && state.manualTotal != null)
+        ? (state.manualTotal! + offerTotalPrice)
+        : (state.subtotal > 0
+            ? (state.payableTotal + offerTotalPrice)
+            : offerTotalPrice);
+
+    state = state.copyWith(
+      items: updatedList,
+      isTotalEdited: newManualTotal > 0,
+      manualTotal: newManualTotal > 0 ? CurrencyUtils.round(newManualTotal) : null,
+    );
+  }
+
   void increaseQuantity(String productName) {
     final index = state.items.indexWhere((item) => item.productName == productName);
     if (index >= 0) {

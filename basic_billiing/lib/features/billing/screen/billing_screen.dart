@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../../core/utils/currency_utils.dart';
 import '../provider/billing_provider.dart';
 import '../provider/billing_state.dart';
 import '../provider/cart_provider.dart';
@@ -171,51 +172,123 @@ class BillingScreen extends ConsumerWidget {
   }
 
   Widget _buildOfferActionsRow(BuildContext context, WidgetRef ref) {
-    return Row(
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
       children: [
-        OutlinedButton.icon(
-          icon: const Icon(Icons.local_offer_outlined, size: 18),
-          label: const Text('Add Offer'),
-          style: OutlinedButton.styleFrom(
-            foregroundColor: AppColors.primary,
-            side: const BorderSide(color: AppColors.primary),
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(8),
+        for (int group = 1; group <= 4; group++)
+          _buildSingleOfferButton(context, ref, group),
+      ],
+    );
+  }
+
+  Widget _buildSingleOfferButton(
+    BuildContext context,
+    WidgetRef ref,
+    int offerGroup,
+  ) {
+    final offerState =
+        ref.watch(offerListFamilyProvider(offerGroup)).valueOrNull ??
+        OfferGroupState(group: offerGroup);
+    final count = offerState.products.length;
+    final price = offerState.totalPrice;
+
+    return Container(
+      decoration: BoxDecoration(
+        color: count > 0
+            ? AppColors.primaryLight.withValues(alpha: 0.15)
+            : AppColors.surface,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(
+          color: count > 0 ? AppColors.primary : AppColors.border,
+          width: 1,
+        ),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          InkWell(
+            borderRadius: const BorderRadius.horizontal(
+              left: Radius.circular(7),
+            ),
+            onTap: () {
+              if (count == 0) {
+                OfferListDialog.show(context, offerGroup: offerGroup);
+              } else {
+                ref
+                    .read(offerListFamilyProvider(offerGroup).notifier)
+                    .addAllOffersToCart();
+              }
+            },
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    Icons.local_offer,
+                    size: 16,
+                    color: count > 0
+                        ? AppColors.primary
+                        : AppColors.textSecondary,
+                  ),
+                  const SizedBox(width: 6),
+                  Text(
+                    price > 0
+                        ? 'Offer $offerGroup (₹${CurrencyUtils.formatPlain(price)})'
+                        : 'Offer $offerGroup',
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: count > 0
+                          ? AppColors.primary
+                          : AppColors.textPrimary,
+                    ),
+                  ),
+                  if (count > 0) ...[
+                    const SizedBox(width: 6),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 6,
+                        vertical: 1,
+                      ),
+                      decoration: BoxDecoration(
+                        color: AppColors.primary,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Text(
+                        '$count',
+                        style: const TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ],
+                ],
+              ),
             ),
           ),
-          onPressed: () {
-            final offers = ref.read(offerListProvider).valueOrNull ?? [];
-            if (offers.isEmpty) {
-              // ScaffoldMessenger.of(context).showSnackBar(
-              //   const SnackBar(
-              //     content: Text(
-              //       'No offer products found. Click the offer tag icon on products to add.',
-              //     ),
-              //   ),
-              // );
-            } else {
-              final count = ref
-                  .read(offerListProvider.notifier)
-                  .addAllOffersToCart();
-              // ScaffoldMessenger.of(context).showSnackBar(
-              //   SnackBar(
-              //     content: Text('Added $count offer items to cart'),
-              //     backgroundColor: AppColors.success,
-              //   ),
-              // );
-            }
-          },
-        ),
-        const SizedBox(width: 4),
-        IconButton(
-          icon: const Icon(Icons.visibility_outlined),
-          tooltip: 'View Offers',
-          onPressed: () {
-            OfferListDialog.show(context);
-          },
-        ),
-      ],
+          Container(
+            width: 1,
+            height: 24,
+            color: count > 0
+                ? AppColors.primary.withValues(alpha: 0.4)
+                : AppColors.border,
+          ),
+          IconButton(
+            icon: const Icon(Icons.visibility_outlined, size: 16),
+            color: AppColors.textSecondary,
+            tooltip: 'Manage Offer $offerGroup ($count items)',
+            padding: const EdgeInsets.all(6),
+            constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+            onPressed: () {
+              OfferListDialog.show(context, offerGroup: offerGroup);
+            },
+          ),
+        ],
+      ),
     );
   }
 }
