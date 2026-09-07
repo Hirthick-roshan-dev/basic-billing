@@ -11,6 +11,7 @@ abstract class IBillingRepository {
   Future<BillModel> updateBill(BillModel bill, List<BillItemModel> items);
   Future<BillModel?> getBillWithItems(int billId);
   Future<void> deleteBill(int billId);
+  Future<bool> isJobCardNumberExists(String jobCardNumber, {int? excludeBillId});
 }
 
 class BillingRepository implements IBillingRepository {
@@ -143,5 +144,32 @@ class BillingRepository implements IBillingRepository {
         whereArgs: [billId],
       );
     });
+  }
+
+  @override
+  Future<bool> isJobCardNumberExists(
+    String jobCardNumber, {
+    int? excludeBillId,
+  }) async {
+    final clean = jobCardNumber.trim();
+    if (clean.isEmpty) return false;
+
+    String where = 'LOWER(${DatabaseConstants.colBillJobCardNumber}) = LOWER(?)';
+    final List<dynamic> whereArgs = [clean];
+
+    if (excludeBillId != null) {
+      where += ' AND ${DatabaseConstants.colBillId} != ?';
+      whereArgs.add(excludeBillId);
+    }
+
+    final results = await db.query(
+      DatabaseConstants.tableBills,
+      columns: [DatabaseConstants.colBillId],
+      where: where,
+      whereArgs: whereArgs,
+      limit: 1,
+    );
+
+    return results.isNotEmpty;
   }
 }

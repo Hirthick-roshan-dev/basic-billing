@@ -14,6 +14,8 @@ class CartState {
   final String km;
   final String jobCardNumber;
   final String paymentType;
+  final String purchaseShopName;
+  final String purchasePaymentType;
   final double discountAmount;
   final bool taxEnabled;
   final double taxPercent;
@@ -29,6 +31,8 @@ class CartState {
     this.km = '',
     this.jobCardNumber = '',
     this.paymentType = 'Cash',
+    this.purchaseShopName = '',
+    this.purchasePaymentType = 'Cash',
     this.discountAmount = 0.0,
     this.taxEnabled = false,
     this.taxPercent = 0.0,
@@ -41,6 +45,14 @@ class CartState {
     double sum = 0.0;
     for (final item in items) {
       sum += item.totalPrice;
+    }
+    return CurrencyUtils.round(sum);
+  }
+
+  double get totalPurchaseAmount {
+    double sum = 0.0;
+    for (final item in items) {
+      sum += item.totalPurchasePrice;
     }
     return CurrencyUtils.round(sum);
   }
@@ -97,6 +109,8 @@ class CartState {
     String? km,
     String? jobCardNumber,
     String? paymentType,
+    String? purchaseShopName,
+    String? purchasePaymentType,
     double? discountAmount,
     bool? taxEnabled,
     double? taxPercent,
@@ -113,10 +127,18 @@ class CartState {
       km: km ?? this.km,
       jobCardNumber: jobCardNumber ?? this.jobCardNumber,
       paymentType: paymentType ?? this.paymentType,
-      discountAmount: discountAmount != null ? CurrencyUtils.round(discountAmount) : this.discountAmount,
+      purchaseShopName: purchaseShopName ?? this.purchaseShopName,
+      purchasePaymentType: purchasePaymentType ?? this.purchasePaymentType,
+      discountAmount: discountAmount != null
+          ? CurrencyUtils.round(discountAmount)
+          : this.discountAmount,
       taxEnabled: taxEnabled ?? this.taxEnabled,
-      taxPercent: taxPercent != null ? CurrencyUtils.round(taxPercent) : this.taxPercent,
-      isTotalEdited: clearManualTotal ? false : (isTotalEdited ?? this.isTotalEdited),
+      taxPercent: taxPercent != null
+          ? CurrencyUtils.round(taxPercent)
+          : this.taxPercent,
+      isTotalEdited: clearManualTotal
+          ? false
+          : (isTotalEdited ?? this.isTotalEdited),
       manualTotal: clearManualTotal ? null : (manualTotal ?? this.manualTotal),
     );
   }
@@ -197,18 +219,22 @@ class CartNotifier extends Notifier<CartState> {
     final newManualTotal = (state.isTotalEdited && state.manualTotal != null)
         ? (state.manualTotal! + offerTotalPrice)
         : (state.subtotal > 0
-            ? (state.payableTotal + offerTotalPrice)
-            : offerTotalPrice);
+              ? (state.payableTotal + offerTotalPrice)
+              : offerTotalPrice);
 
     state = state.copyWith(
       items: updatedList,
       isTotalEdited: newManualTotal > 0,
-      manualTotal: newManualTotal > 0 ? CurrencyUtils.round(newManualTotal) : null,
+      manualTotal: newManualTotal > 0
+          ? CurrencyUtils.round(newManualTotal)
+          : null,
     );
   }
 
   void increaseQuantity(String productName) {
-    final index = state.items.indexWhere((item) => item.productName == productName);
+    final index = state.items.indexWhere(
+      (item) => item.productName == productName,
+    );
     if (index >= 0) {
       final updatedList = List<CartItemModel>.from(state.items);
       updatedList[index] = updatedList[index].copyWith(
@@ -219,7 +245,9 @@ class CartNotifier extends Notifier<CartState> {
   }
 
   void decreaseQuantity(String productName) {
-    final index = state.items.indexWhere((item) => item.productName == productName);
+    final index = state.items.indexWhere(
+      (item) => item.productName == productName,
+    );
     if (index >= 0) {
       final current = state.items[index];
       if (current.quantity > 1) {
@@ -234,19 +262,53 @@ class CartNotifier extends Notifier<CartState> {
 
   void removeItem(String productName) {
     state = state.copyWith(
-      items: state.items.where((item) => item.productName != productName).toList(),
+      items: state.items
+          .where((item) => item.productName != productName)
+          .toList(),
     );
   }
 
   void updateItemPrice(String productName, double newUnitPrice) {
-    final index = state.items.indexWhere((item) => item.productName == productName);
+    final index = state.items.indexWhere(
+      (item) => item.productName == productName,
+    );
     if (index >= 0) {
       final updatedList = List<CartItemModel>.from(state.items);
       updatedList[index] = updatedList[index].copyWith(
-        unitPrice: CurrencyUtils.round(newUnitPrice.clamp(0.0, double.infinity)),
+        unitPrice: CurrencyUtils.round(
+          newUnitPrice.clamp(0.0, double.infinity),
+        ),
       );
       state = state.copyWith(items: updatedList);
     }
+  }
+
+  void updateItemPurchasePrice(String productName, double purchasePrice) {
+    final index = state.items.indexWhere(
+      (item) => item.productName == productName,
+    );
+    if (index >= 0) {
+      final updatedList = List<CartItemModel>.from(state.items);
+      updatedList[index] = updatedList[index].copyWith(
+        purchasePrice: CurrencyUtils.round(
+          purchasePrice.clamp(0.0, double.infinity),
+        ),
+      );
+      state = state.copyWith(items: updatedList);
+    }
+  }
+
+  void setAllPurchasePrices(Map<String, double> prices) {
+    final updatedList = state.items.map((item) {
+      final price = prices[item.productName];
+      if (price != null) {
+        return item.copyWith(
+          purchasePrice: CurrencyUtils.round(price.clamp(0.0, double.infinity)),
+        );
+      }
+      return item;
+    }).toList();
+    state = state.copyWith(items: updatedList);
   }
 
   void setCustomerName(String name) {
@@ -277,19 +339,33 @@ class CartNotifier extends Notifier<CartState> {
     state = state.copyWith(paymentType: paymentType);
   }
 
+  void setPurchaseShopName(String shopName) {
+    state = state.copyWith(purchaseShopName: shopName);
+  }
+
+  void setPurchasePaymentType(String paymentType) {
+    state = state.copyWith(purchasePaymentType: paymentType);
+  }
+
   void setDiscountAmount(double amount) {
-    state = state.copyWith(discountAmount: CurrencyUtils.round(amount.clamp(0.0, double.infinity)));
+    state = state.copyWith(
+      discountAmount: CurrencyUtils.round(amount.clamp(0.0, double.infinity)),
+    );
   }
 
   void setDiscountPercent(double percent) {
     final calculatedAmount = (state.subtotal * percent) / 100.0;
-    state = state.copyWith(discountAmount: CurrencyUtils.round(calculatedAmount));
+    state = state.copyWith(
+      discountAmount: CurrencyUtils.round(calculatedAmount),
+    );
   }
 
   void setTaxSettings({required bool enabled, required double percent}) {
     state = state.copyWith(
       taxEnabled: enabled,
-      taxPercent: enabled ? CurrencyUtils.round(percent.clamp(0.0, 100.0)) : 0.0,
+      taxPercent: enabled
+          ? CurrencyUtils.round(percent.clamp(0.0, 100.0))
+          : 0.0,
     );
   }
 
@@ -313,6 +389,7 @@ class CartNotifier extends Notifier<CartState> {
       return CartItemModel(
         productName: i.productName,
         unitPrice: i.unitPrice,
+        purchasePrice: i.purchasePrice,
         quantity: i.quantity,
       );
     }).toList();
@@ -326,6 +403,8 @@ class CartNotifier extends Notifier<CartState> {
       km: bill.km ?? '',
       jobCardNumber: bill.jobCardNumber ?? '',
       paymentType: bill.paymentType,
+      purchaseShopName: bill.purchaseShopName ?? '',
+      purchasePaymentType: bill.purchasePaymentType ?? 'Cash',
       discountAmount: bill.discountAmount,
       taxEnabled: bill.taxPercent > 0 || bill.taxAmount > 0,
       taxPercent: bill.taxPercent,
@@ -342,6 +421,8 @@ class CartNotifier extends Notifier<CartState> {
       taxEnabled: settings?.taxEnabled ?? false,
       taxPercent: settings?.taxPercent ?? 0.0,
       paymentType: 'Cash',
+      purchaseShopName: '',
+      purchasePaymentType: 'Cash',
     );
   }
 }

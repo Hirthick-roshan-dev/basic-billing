@@ -5,6 +5,7 @@ import '../../../../core/theme/app_text_styles.dart';
 import '../provider/billing_history_provider.dart';
 import 'widgets/billing_history_summary_card.dart';
 import 'widgets/billing_list.dart';
+import 'widgets/billing_search_bar.dart';
 import 'widgets/date_filter.dart';
 
 class BillingHistoryScreen extends ConsumerWidget {
@@ -34,6 +35,8 @@ class BillingHistoryScreen extends ConsumerWidget {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             const DateFilterWidget(),
+            const SizedBox(height: 12),
+            const BillingSearchBar(),
             const SizedBox(height: 14),
             const BillingHistorySummaryCard(),
             const SizedBox(height: 14),

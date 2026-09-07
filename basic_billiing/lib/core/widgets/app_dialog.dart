@@ -77,14 +77,12 @@ class AppDialog extends StatelessWidget {
               ),
               if (actions != null && actions!.isNotEmpty) ...[
                 const SizedBox(height: 24),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: actions!
-                      .map((action) => Padding(
-                            padding: const EdgeInsets.only(left: 12),
-                            child: action,
-                          ))
-                      .toList(),
+                Wrap(
+                  alignment: WrapAlignment.end,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  spacing: 12,
+                  runSpacing: 8,
+                  children: actions!,
                 ),
               ],
             ],

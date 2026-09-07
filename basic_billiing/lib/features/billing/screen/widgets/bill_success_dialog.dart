@@ -6,6 +6,7 @@ import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/utils/currency_utils.dart';
 import '../../../../core/widgets/app_button.dart';
 import '../../../../core/widgets/app_dialog.dart';
+import '../../../../core/widgets/whatsapp_share_dialog.dart';
 import '../../model/bill_model.dart';
 import '../../provider/billing_provider.dart';
 
@@ -43,7 +44,7 @@ class _BillSuccessDialogState extends ConsumerState<BillSuccessDialog> {
       title: isEdit
           ? 'Bill Updated Successfully'
           : 'Bill Completed Successfully',
-      maxWidth: 480,
+      maxWidth: 520,
       content: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -81,6 +82,15 @@ class _BillSuccessDialogState extends ConsumerState<BillSuccessDialog> {
                         'Total: ${CurrencyUtils.format(bill.totalAmount)}  •  ${bill.paymentType.toUpperCase()}  •  ${bill.items.length} items',
                         style: AppTextStyles.bodySmall,
                       ),
+                      if (bill.customerPhone?.isNotEmpty == true) ...[
+                        const SizedBox(height: 2),
+                        Text(
+                          'Customer: ${bill.customerName ?? 'Walk-in'} (${bill.customerPhone})',
+                          style: AppTextStyles.bodySmall.copyWith(
+                            color: AppColors.textSecondary,
+                          ),
+                        ),
+                      ],
                     ],
                   ),
                 ),
@@ -96,6 +106,14 @@ class _BillSuccessDialogState extends ConsumerState<BillSuccessDialog> {
       ),
       actions: [
         AppButton(
+          label: 'WhatsApp',
+          icon: Icons.chat,
+          variant: AppButtonVariant.secondary,
+          onPressed: () async {
+            await WhatsAppShareDialog.show(context, bill);
+          },
+        ),
+        AppButton(
           label: 'Open PDF',
           icon: Icons.picture_as_pdf,
           isLoading: _isOpeningPdf,
@@ -106,17 +124,9 @@ class _BillSuccessDialogState extends ConsumerState<BillSuccessDialog> {
                   setState(() => _isOpeningPdf = true);
                   try {
                     final fileService = ref.read(fileServiceProvider);
-                    final opened = await fileService.openInvoicePdf(
+                    await fileService.openInvoicePdf(
                       bill.invoiceNumber,
                     );
-                    if (!opened && context.mounted) {
-                      // ScaffoldMessenger.of(context).showSnackBar(
-                      //   const SnackBar(
-                      //     content:
-                      //         Text('Could not open PDF with default viewer'),
-                      //   ),
-                      // );
-                    }
                   } catch (e) {
                     if (context.mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(

@@ -8,9 +8,12 @@ import '../../../../core/utils/date_utils.dart';
 import '../../../../core/widgets/app_button.dart';
 import '../../../../core/widgets/app_dialog.dart';
 import '../../../../core/widgets/loading_widget.dart';
+import '../../../../core/widgets/whatsapp_share_dialog.dart';
 import '../../../billing/model/bill_model.dart';
 import '../../../billing/provider/billing_provider.dart';
 import '../../provider/billing_history_provider.dart';
+import '../../../settings/provider/admin_view_provider.dart';
+import 'admin_pass_key_dialog.dart';
 import 'delete_bill_dialog.dart';
 
 class BillingDetailsDialog extends ConsumerStatefulWidget {
@@ -106,6 +109,7 @@ class _BillingDetailsDialogState extends ConsumerState<BillingDetailsDialog> {
     }
 
     final bill = _bill!;
+    final isAdminView = ref.watch(adminViewProvider);
 
     return AppDialog(
       title: 'Invoice ${bill.invoiceNumber}',
@@ -294,43 +298,61 @@ class _BillingDetailsDialogState extends ConsumerState<BillingDetailsDialog> {
 
           // Items List
           ...bill.items.map((item) {
+            final hasPurchasePrice = item.purchasePrice > 0;
             return Padding(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-              child: Row(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Expanded(
-                    flex: 4,
-                    child: Text(
-                      item.productName,
-                      style: AppTextStyles.bodyMedium,
-                    ),
+                  Row(
+                    children: [
+                      Expanded(
+                        flex: 4,
+                        child: Text(
+                          item.productName,
+                          style: AppTextStyles.bodyMedium,
+                        ),
+                      ),
+                      Expanded(
+                        flex: 2,
+                        child: Text(
+                          CurrencyUtils.format(item.unitPrice),
+                          textAlign: TextAlign.right,
+                          style: AppTextStyles.bodySmall,
+                        ),
+                      ),
+                      Expanded(
+                        flex: 2,
+                        child: Text(
+                          '${item.quantity}',
+                          textAlign: TextAlign.center,
+                          style: AppTextStyles.bodyMedium,
+                        ),
+                      ),
+                      Expanded(
+                        flex: 2,
+                        child: Text(
+                          CurrencyUtils.format(item.totalPrice),
+                          textAlign: TextAlign.right,
+                          style: AppTextStyles.bodyMedium.copyWith(
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
-                  Expanded(
-                    flex: 2,
-                    child: Text(
-                      CurrencyUtils.format(item.unitPrice),
-                      textAlign: TextAlign.right,
-                      style: AppTextStyles.bodySmall,
-                    ),
-                  ),
-                  Expanded(
-                    flex: 2,
-                    child: Text(
-                      '${item.quantity}',
-                      textAlign: TextAlign.center,
-                      style: AppTextStyles.bodyMedium,
-                    ),
-                  ),
-                  Expanded(
-                    flex: 2,
-                    child: Text(
-                      CurrencyUtils.format(item.totalPrice),
-                      textAlign: TextAlign.right,
-                      style: AppTextStyles.bodyMedium.copyWith(
-                        fontWeight: FontWeight.w600,
+                  if (isAdminView && hasPurchasePrice)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 2),
+                      child: Text(
+                        'Purchase: ${CurrencyUtils.format(item.purchasePrice)} each (Cost: ${CurrencyUtils.format(item.purchasePrice * item.quantity)})',
+                        style: const TextStyle(
+                          fontSize: 11,
+                          color: AppColors.textTertiary,
+                          fontStyle: FontStyle.italic,
+                        ),
                       ),
                     ),
-                  ),
                 ],
               ),
             );
@@ -387,6 +409,127 @@ class _BillingDetailsDialogState extends ConsumerState<BillingDetailsDialog> {
               ],
             ),
           ),
+
+          // Profit & Loss Breakdown Card (Admin Only)
+          if (isAdminView) ...[
+            Container(
+              margin: const EdgeInsets.only(top: 14),
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: bill.isProfit
+                    ? AppColors.successLight.withValues(alpha: 0.4)
+                    : AppColors.errorLight.withValues(alpha: 0.4),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(
+                  color: bill.isProfit
+                      ? AppColors.success.withValues(alpha: 0.5)
+                      : AppColors.error.withValues(alpha: 0.5),
+                ),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Row(
+                    children: [
+                      Icon(
+                        bill.isProfit ? Icons.trending_up : Icons.trending_down,
+                        size: 16,
+                        color: bill.isProfit ? AppColors.success : AppColors.error,
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        'PROFIT & LOSS SUMMARY',
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 0.5,
+                          color: bill.isProfit ? AppColors.success : AppColors.error,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text('Sold to Customer:', style: AppTextStyles.bodySmall),
+                      Text(
+                        CurrencyUtils.format(bill.totalAmount),
+                        style: AppTextStyles.bodySmall.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text('Total Purchase Cost:', style: AppTextStyles.bodySmall),
+                      Text(
+                        CurrencyUtils.format(bill.totalPurchaseAmount),
+                        style: AppTextStyles.bodySmall.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                  if (bill.purchaseShopName != null &&
+                      bill.purchaseShopName!.isNotEmpty) ...[
+                    const SizedBox(height: 4),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text('Purchase Shop:', style: AppTextStyles.bodySmall),
+                        Text(
+                          bill.purchaseShopName!,
+                          style: AppTextStyles.bodySmall.copyWith(
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                  if (bill.purchasePaymentType != null &&
+                      bill.purchasePaymentType!.isNotEmpty) ...[
+                    const SizedBox(height: 4),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text('Purchase Paid Via:', style: AppTextStyles.bodySmall),
+                        Text(
+                          bill.purchasePaymentType!,
+                          style: AppTextStyles.bodySmall.copyWith(
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                  const Divider(height: 12),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        bill.isProfit ? 'Net Profit:' : 'Net Loss:',
+                        style: AppTextStyles.bodyMedium.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: bill.isProfit ? AppColors.success : AppColors.error,
+                        ),
+                      ),
+                      Text(
+                        '${bill.isProfit ? '+' : '-'} ${CurrencyUtils.format(bill.profitOrLoss.abs())}',
+                        style: AppTextStyles.bodyLarge.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: bill.isProfit ? AppColors.success : AppColors.error,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
         ],
       ),
       actions: [
@@ -405,10 +548,21 @@ class _BillingDetailsDialogState extends ConsumerState<BillingDetailsDialog> {
           label: 'Edit Bill',
           icon: Icons.edit,
           variant: AppButtonVariant.outline,
-          onPressed: () {
-            ref.read(billingProcessProvider.notifier).startEditBill(bill);
-            Navigator.of(context).pop();
-            widget.onNavigateToBilling?.call();
+          onPressed: () async {
+            final authorized = await AdminPassKeyDialog.show(context);
+            if (authorized == true && context.mounted) {
+              ref.read(billingProcessProvider.notifier).startEditBill(bill);
+              Navigator.of(context).pop();
+              widget.onNavigateToBilling?.call();
+            }
+          },
+        ),
+        AppButton(
+          label: 'WhatsApp',
+          icon: Icons.chat,
+          variant: AppButtonVariant.secondary,
+          onPressed: () async {
+            await WhatsAppShareDialog.show(context, bill);
           },
         ),
         AppButton(
@@ -422,8 +576,9 @@ class _BillingDetailsDialogState extends ConsumerState<BillingDetailsDialog> {
                   setState(() => _isPdfOpening = true);
                   try {
                     final fileService = ref.read(fileServiceProvider);
-                    var file =
-                        await fileService.getInvoicePdf(bill.invoiceNumber);
+                    var file = await fileService.getInvoicePdf(
+                      bill.invoiceNumber,
+                    );
                     if (file == null || !await file.exists()) {
                       // Generate and save if not exists
                       final settings = await ref
@@ -439,13 +594,15 @@ class _BillingDetailsDialogState extends ConsumerState<BillingDetailsDialog> {
                         bytes: bytes,
                       );
                     }
-                    final opened =
-                        await fileService.openInvoicePdf(bill.invoiceNumber);
+                    final opened = await fileService.openInvoicePdf(
+                      bill.invoiceNumber,
+                    );
                     if (!opened && context.mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(
-                          content:
-                              Text('Could not open PDF with default viewer'),
+                          content: Text(
+                            'Could not open PDF with default viewer',
+                          ),
                         ),
                       );
                     }

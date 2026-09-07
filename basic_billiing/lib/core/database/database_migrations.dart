@@ -28,12 +28,15 @@ class DatabaseMigrations {
         ${DatabaseConstants.colBillKm} TEXT,
         ${DatabaseConstants.colBillJobCardNumber} TEXT,
         ${DatabaseConstants.colBillPaymentType} TEXT DEFAULT 'Cash',
+        ${DatabaseConstants.colBillPurchaseShopName} TEXT,
+        ${DatabaseConstants.colBillPurchasePaymentType} TEXT DEFAULT 'Cash',
         ${DatabaseConstants.colBillSubtotal} REAL NOT NULL,
         ${DatabaseConstants.colBillDiscountPercent} REAL DEFAULT 0,
         ${DatabaseConstants.colBillDiscountAmount} REAL DEFAULT 0,
         ${DatabaseConstants.colBillTaxPercent} REAL DEFAULT 0,
         ${DatabaseConstants.colBillTaxAmount} REAL DEFAULT 0,
         ${DatabaseConstants.colBillTotalAmount} REAL NOT NULL,
+        ${DatabaseConstants.colBillTotalPurchaseAmount} REAL DEFAULT 0.0,
         ${DatabaseConstants.colBillIsTotalEdited} INTEGER DEFAULT 0,
         ${DatabaseConstants.colBillCreatedAt} TEXT NOT NULL,
         ${DatabaseConstants.colBillUpdatedAt} TEXT
@@ -47,6 +50,7 @@ class DatabaseMigrations {
         ${DatabaseConstants.colBillItemBillId} INTEGER NOT NULL,
         ${DatabaseConstants.colBillItemProductName} TEXT NOT NULL,
         ${DatabaseConstants.colBillItemUnitPrice} REAL NOT NULL,
+        ${DatabaseConstants.colBillItemPurchasePrice} REAL DEFAULT 0.0,
         ${DatabaseConstants.colBillItemQuantity} INTEGER NOT NULL,
         ${DatabaseConstants.colBillItemTotalPrice} REAL NOT NULL,
         FOREIGN KEY (${DatabaseConstants.colBillItemBillId}) REFERENCES ${DatabaseConstants.tableBills} (${DatabaseConstants.colBillId}) ON DELETE CASCADE
@@ -94,7 +98,8 @@ class DatabaseMigrations {
         DatabaseConstants.colOfferGroupId: g,
         DatabaseConstants.colOfferGroupName: 'Offer $g',
         DatabaseConstants.colOfferGroupTotalPrice: 0.0,
-        DatabaseConstants.colOfferGroupUpdatedAt: DateTime.now().toIso8601String(),
+        DatabaseConstants.colOfferGroupUpdatedAt: DateTime.now()
+            .toIso8601String(),
       });
     }
 
@@ -132,7 +137,8 @@ class DatabaseMigrations {
           DatabaseConstants.colSettingsPhoneNumber: '78 71 75 78 78',
           DatabaseConstants.colSettingsAddress:
               'No.1, Park Avenue, Near Aravind Eye Hospital, Udumalpet - 642126',
-          DatabaseConstants.colSettingsUpdatedAt: DateTime.now().toIso8601String(),
+          DatabaseConstants.colSettingsUpdatedAt: DateTime.now()
+              .toIso8601String(),
         },
         where: '${DatabaseConstants.colSettingsId} = ?',
         whereArgs: [1],
@@ -220,11 +226,38 @@ class DatabaseMigrations {
               DatabaseConstants.colOfferGroupId: g,
               DatabaseConstants.colOfferGroupName: 'Offer $g',
               DatabaseConstants.colOfferGroupTotalPrice: 0.0,
-              DatabaseConstants.colOfferGroupUpdatedAt: DateTime.now().toIso8601String(),
+              DatabaseConstants.colOfferGroupUpdatedAt: DateTime.now()
+                  .toIso8601String(),
             },
             conflictAlgorithm: ConflictAlgorithm.ignore,
           );
         }
+      } catch (_) {}
+    }
+
+    if (oldVersion < 9) {
+      try {
+        await db.execute(
+          'ALTER TABLE ${DatabaseConstants.tableBills} ADD COLUMN ${DatabaseConstants.colBillTotalPurchaseAmount} REAL DEFAULT 0.0',
+        );
+      } catch (_) {}
+      try {
+        await db.execute(
+          'ALTER TABLE ${DatabaseConstants.tableBillItems} ADD COLUMN ${DatabaseConstants.colBillItemPurchasePrice} REAL DEFAULT 0.0',
+        );
+      } catch (_) {}
+    }
+
+    if (oldVersion < 10) {
+      try {
+        await db.execute(
+          'ALTER TABLE ${DatabaseConstants.tableBills} ADD COLUMN ${DatabaseConstants.colBillPurchaseShopName} TEXT',
+        );
+      } catch (_) {}
+      try {
+        await db.execute(
+          'ALTER TABLE ${DatabaseConstants.tableBills} ADD COLUMN ${DatabaseConstants.colBillPurchasePaymentType} TEXT DEFAULT \'Cash\'',
+        );
       } catch (_) {}
     }
   }

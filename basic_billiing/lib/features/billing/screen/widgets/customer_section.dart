@@ -1,9 +1,12 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../core/providers/core_providers.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/utils/validators.dart';
 import '../../../../core/widgets/app_text_field.dart';
+import '../../provider/billing_provider.dart';
 import '../../provider/cart_provider.dart';
 
 class CustomerSection extends ConsumerStatefulWidget {
@@ -20,13 +23,19 @@ class _CustomerSectionState extends ConsumerState<CustomerSection> {
   late final TextEditingController _modelController;
   late final TextEditingController _kmController;
   late final TextEditingController _jobCardController;
+  String? _jobCardError;
+  Timer? _jobCardDebounce;
 
   @override
   void initState() {
     super.initState();
     final cart = ref.read(cartProvider);
     _nameController = TextEditingController(text: cart.customerName);
-    _phoneController = TextEditingController(text: cart.customerPhone);
+    String initialPhone = cart.customerPhone;
+    if (initialPhone.startsWith('+91')) {
+      initialPhone = initialPhone.substring(3).trim();
+    }
+    _phoneController = TextEditingController(text: initialPhone);
     _vehicleController = TextEditingController(text: cart.vehicleNumber);
     _modelController = TextEditingController(text: cart.vehicleModel);
     _kmController = TextEditingController(text: cart.km);
@@ -40,8 +49,12 @@ class _CustomerSectionState extends ConsumerState<CustomerSection> {
     if (_nameController.text != cart.customerName) {
       _nameController.text = cart.customerName;
     }
-    if (_phoneController.text != cart.customerPhone) {
-      _phoneController.text = cart.customerPhone;
+    String displayPhone = cart.customerPhone;
+    if (displayPhone.startsWith('+91')) {
+      displayPhone = displayPhone.substring(3).trim();
+    }
+    if (_phoneController.text != displayPhone) {
+      _phoneController.text = displayPhone;
     }
     if (_vehicleController.text != cart.vehicleNumber) {
       _vehicleController.text = cart.vehicleNumber;
@@ -65,29 +78,66 @@ class _CustomerSectionState extends ConsumerState<CustomerSection> {
     _modelController.dispose();
     _kmController.dispose();
     _jobCardController.dispose();
+    _jobCardDebounce?.cancel();
     super.dispose();
+  }
+
+  void _checkJobCardDuplicate(String val) {
+    _jobCardDebounce?.cancel();
+    final trimmed = val.trim();
+    if (trimmed.isEmpty) {
+      if (_jobCardError != null) {
+        setState(() => _jobCardError = null);
+      }
+      return;
+    }
+
+    _jobCardDebounce = Timer(const Duration(milliseconds: 350), () async {
+      final billingRepo = ref.read(billingRepositoryProvider);
+      final mode = ref.read(billingModeProvider);
+      final exists = await billingRepo.isJobCardNumberExists(
+        trimmed,
+        excludeBillId: mode.isEdit ? mode.billId : null,
+      );
+      if (mounted) {
+        setState(() {
+          _jobCardError = exists ? 'This Job Card number already exists' : null;
+        });
+      }
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     ref.listen<CartState>(cartProvider, (previous, next) {
-      if (previous?.customerName != next.customerName && _nameController.text != next.customerName) {
+      if (previous?.customerName != next.customerName &&
+          _nameController.text != next.customerName) {
         _nameController.text = next.customerName;
       }
-      if (previous?.customerPhone != next.customerPhone && _phoneController.text != next.customerPhone) {
-        _phoneController.text = next.customerPhone;
+      String displayPhone = next.customerPhone;
+      if (displayPhone.startsWith('+91')) {
+        displayPhone = displayPhone.substring(3).trim();
       }
-      if (previous?.vehicleNumber != next.vehicleNumber && _vehicleController.text != next.vehicleNumber) {
+      if (_phoneController.text != displayPhone) {
+        _phoneController.text = displayPhone;
+      }
+      if (previous?.vehicleNumber != next.vehicleNumber &&
+          _vehicleController.text != next.vehicleNumber) {
         _vehicleController.text = next.vehicleNumber;
       }
-      if (previous?.vehicleModel != next.vehicleModel && _modelController.text != next.vehicleModel) {
+      if (previous?.vehicleModel != next.vehicleModel &&
+          _modelController.text != next.vehicleModel) {
         _modelController.text = next.vehicleModel;
       }
       if (previous?.km != next.km && _kmController.text != next.km) {
         _kmController.text = next.km;
       }
-      if (previous?.jobCardNumber != next.jobCardNumber && _jobCardController.text != next.jobCardNumber) {
+      if (previous?.jobCardNumber != next.jobCardNumber &&
+          _jobCardController.text != next.jobCardNumber) {
         _jobCardController.text = next.jobCardNumber;
+        if (next.jobCardNumber.isEmpty && _jobCardError != null) {
+          setState(() => _jobCardError = null);
+        }
       }
     });
 
@@ -116,16 +166,23 @@ class _CustomerSectionState extends ConsumerState<CustomerSection> {
             Expanded(
               child: AppTextField(
                 controller: _phoneController,
-                label: 'Phone (Optional)',
-                hintText: 'e.g. 9876543210',
+                label: 'Phone (WhatsApp)',
+                hintText: '9876543210',
+                prefixText: '+91 ',
+                maxLength: 10,
                 keyboardType: TextInputType.phone,
                 prefixIcon: const Icon(Icons.phone_outlined, size: 18),
                 inputFormatters: [
-                  FilteringTextInputFormatter.allow(RegExp(r'^[0-9+\s\-()]*')),
+                  FilteringTextInputFormatter.digitsOnly,
                 ],
-                validator: Validators.validatePhone,
+                validator: Validators.validateIndianPhone,
                 onChanged: (val) {
-                  ref.read(cartProvider.notifier).setCustomerPhone(val);
+                  final clean = val.trim();
+                  if (clean.isNotEmpty) {
+                    ref.read(cartProvider.notifier).setCustomerPhone('+91$clean');
+                  } else {
+                    ref.read(cartProvider.notifier).setCustomerPhone('');
+                  }
                 },
               ),
             ),
@@ -183,8 +240,10 @@ class _CustomerSectionState extends ConsumerState<CustomerSection> {
                 hintText: 'e.g. JC-1024',
                 prefixIcon: const Icon(Icons.assignment_outlined, size: 18),
                 textCapitalization: TextCapitalization.characters,
+                errorText: _jobCardError,
                 onChanged: (val) {
                   ref.read(cartProvider.notifier).setJobCardNumber(val);
+                  _checkJobCardDuplicate(val);
                 },
               ),
             ),

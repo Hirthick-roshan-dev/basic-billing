@@ -17,12 +17,14 @@ class AppTextField extends StatelessWidget {
   final void Function(String)? onSubmitted;
   final bool readOnly;
   final bool autofocus;
+  final bool obscureText;
   final FocusNode? focusNode;
   final int maxLines;
   final int? maxLength;
   final TextStyle? textStyle;
   final TextAlign textAlign;
   final TextCapitalization textCapitalization;
+  final String? errorText;
 
   const AppTextField({
     super.key,
@@ -39,12 +41,14 @@ class AppTextField extends StatelessWidget {
     this.onSubmitted,
     this.readOnly = false,
     this.autofocus = false,
+    this.obscureText = false,
     this.focusNode,
     this.maxLines = 1,
     this.maxLength,
     this.textStyle,
     this.textAlign = TextAlign.start,
     this.textCapitalization = TextCapitalization.none,
+    this.errorText,
   });
 
   @override
@@ -71,6 +75,7 @@ class AppTextField extends StatelessWidget {
           onFieldSubmitted: onSubmitted,
           readOnly: readOnly,
           autofocus: autofocus,
+          obscureText: obscureText,
           maxLines: maxLines,
           maxLength: maxLength,
           textAlign: textAlign,
@@ -80,6 +85,7 @@ class AppTextField extends StatelessWidget {
             prefixText: prefixText,
             prefixIcon: prefixIcon,
             suffixIcon: suffixIcon,
+            errorText: errorText,
             filled: true,
             fillColor: readOnly ? AppColors.surfaceVariant : AppColors.surface,
           ),

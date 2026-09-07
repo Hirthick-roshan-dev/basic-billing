@@ -44,6 +44,19 @@ class Validators {
     return null;
   }
 
+  static String? validateIndianPhone(String? value) {
+    if (value == null || value.trim().isEmpty) {
+      return null; // Phone is optional
+    }
+    final digits = value.replaceAll(RegExp(r'\D'), '');
+    if (digits.length == 10 ||
+        (digits.length == 11 && digits.startsWith('0')) ||
+        (digits.length == 12 && digits.startsWith('91'))) {
+      return null;
+    }
+    return 'Enter a valid 10-digit mobile number';
+  }
+
   static String? validatePercentage(String? value, {double max = 100.0}) {
     if (value == null || value.trim().isEmpty) {
       return null;

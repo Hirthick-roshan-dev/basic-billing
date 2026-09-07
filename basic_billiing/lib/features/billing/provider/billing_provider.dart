@@ -14,8 +14,8 @@ final billingModeProvider = StateProvider<BillingMode>((ref) {
 
 final billingProcessProvider =
     StateNotifierProvider<BillingNotifier, BillingProcessState>((ref) {
-  return BillingNotifier(ref);
-});
+      return BillingNotifier(ref);
+    });
 
 class BillingNotifier extends StateNotifier<BillingProcessState> {
   final Ref ref;
@@ -51,7 +51,9 @@ class BillingNotifier extends StateNotifier<BillingProcessState> {
     final mode = ref.read(billingModeProvider);
 
     if (cart.isEmpty) {
-      state = const BillingErrorState('Cannot complete an empty bill. Please add products.');
+      state = const BillingErrorState(
+        'Cannot complete an empty bill. Please add products.',
+      );
       return false;
     }
 
@@ -62,7 +64,8 @@ class BillingNotifier extends StateNotifier<BillingProcessState> {
       final pdfService = ref.read(pdfServiceProvider);
       final fileService = ref.read(fileServiceProvider);
       final settingsAsync = ref.read(settingsProvider);
-      final settings = settingsAsync.valueOrNull ??
+      final settings =
+          settingsAsync.valueOrNull ??
           await ref.read(settingsRepositoryProvider).getSettings();
 
       final now = DateTime.now();
@@ -84,19 +87,36 @@ class BillingNotifier extends StateNotifier<BillingProcessState> {
       final billToSave = BillModel(
         id: mode.isEdit ? mode.billId : null,
         invoiceNumber: invoiceNumber,
-        customerName: cart.customerName.trim().isNotEmpty ? cart.customerName.trim() : null,
-        customerPhone: cart.customerPhone.trim().isNotEmpty ? cart.customerPhone.trim() : null,
-        vehicleNumber: cart.vehicleNumber.trim().isNotEmpty ? cart.vehicleNumber.trim() : null,
-        vehicleModel: cart.vehicleModel.trim().isNotEmpty ? cart.vehicleModel.trim() : null,
+        customerName: cart.customerName.trim().isNotEmpty
+            ? cart.customerName.trim()
+            : null,
+        customerPhone: cart.customerPhone.trim().isNotEmpty
+            ? cart.customerPhone.trim()
+            : null,
+        vehicleNumber: cart.vehicleNumber.trim().isNotEmpty
+            ? cart.vehicleNumber.trim()
+            : null,
+        vehicleModel: cart.vehicleModel.trim().isNotEmpty
+            ? cart.vehicleModel.trim()
+            : null,
         km: cart.km.trim().isNotEmpty ? cart.km.trim() : null,
-        jobCardNumber: cart.jobCardNumber.trim().isNotEmpty ? cart.jobCardNumber.trim() : null,
+        jobCardNumber: cart.jobCardNumber.trim().isNotEmpty
+            ? cart.jobCardNumber.trim()
+            : null,
         paymentType: cart.paymentType,
+        purchaseShopName: cart.purchaseShopName.trim().isNotEmpty
+            ? cart.purchaseShopName.trim()
+            : null,
+        purchasePaymentType: cart.purchasePaymentType.trim().isNotEmpty
+            ? cart.purchasePaymentType.trim()
+            : 'Cash',
         subtotal: cart.subtotal,
         discountPercent: cart.discountPercent,
         discountAmount: cart.effectiveDiscountAmount,
         taxPercent: cart.taxEnabled ? cart.taxPercent : 0.0,
         taxAmount: cart.taxAmount,
         totalAmount: cart.payableTotal,
+        totalPurchaseAmount: cart.totalPurchaseAmount,
         isTotalEdited: cart.isTotalEdited,
         createdAt: createdAt,
         updatedAt: updatedAt,
@@ -107,6 +127,7 @@ class BillingNotifier extends StateNotifier<BillingProcessState> {
         return BillItemModel(
           productName: item.productName,
           unitPrice: item.unitPrice,
+          purchasePrice: item.purchasePrice,
           quantity: item.quantity,
           totalPrice: item.totalPrice,
         );

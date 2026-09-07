@@ -3,6 +3,30 @@ import '../../../core/providers/core_providers.dart';
 import '../../billing/model/bill_model.dart';
 import 'billing_filter_provider.dart';
 
+final billingSearchQueryProvider = StateProvider<String>((ref) => '');
+
+final filteredBillingHistoryListProvider =
+    Provider<AsyncValue<List<BillModel>>>((ref) {
+  final historyAsync = ref.watch(billingHistoryListProvider);
+  final query = ref.watch(billingSearchQueryProvider).trim().toLowerCase();
+
+  return historyAsync.whenData((bills) {
+    if (query.isEmpty) return bills;
+    return bills.where((bill) {
+      final vehicleNo = bill.vehicleNumber?.toLowerCase() ?? '';
+      final customerName = bill.customerName?.toLowerCase() ?? '';
+      final invoiceNo = bill.invoiceNumber.toLowerCase();
+      final jobCard = bill.jobCardNumber?.toLowerCase() ?? '';
+      final phone = bill.customerPhone?.toLowerCase() ?? '';
+      return vehicleNo.contains(query) ||
+          customerName.contains(query) ||
+          invoiceNo.contains(query) ||
+          jobCard.contains(query) ||
+          phone.contains(query);
+    }).toList();
+  });
+});
+
 final billingHistoryListProvider =
     AsyncNotifierProvider<BillingHistoryNotifier, List<BillModel>>(() {
   return BillingHistoryNotifier();

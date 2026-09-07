@@ -10,6 +10,7 @@ abstract class IFileService {
   Future<File?> getInvoicePdf(String invoiceNumber);
   Future<bool> deleteInvoicePdf(String invoiceNumber);
   Future<bool> openInvoicePdf(String invoiceNumber);
+  Future<bool> openInvoiceFolder(String invoiceNumber);
 }
 
 class FileService implements IFileService {
@@ -63,6 +64,25 @@ class FileService implements IFileService {
       final file = await getInvoicePdf(invoiceNumber);
       if (file != null && await file.exists()) {
         final result = await OpenFilex.open(file.path);
+        return result.type == ResultType.done;
+      }
+      return false;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  @override
+  Future<bool> openInvoiceFolder(String invoiceNumber) async {
+    try {
+      final file = await getInvoicePdf(invoiceNumber);
+      if (file != null && await file.exists()) {
+        if (Platform.isWindows) {
+          await Process.run('explorer.exe', ['/select,${file.path}']);
+          return true;
+        }
+        final invoicesDir = await getInvoicesDirectory();
+        final result = await OpenFilex.open(invoicesDir.path);
         return result.type == ResultType.done;
       }
       return false;

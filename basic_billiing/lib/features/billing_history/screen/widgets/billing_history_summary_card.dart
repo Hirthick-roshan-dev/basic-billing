@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/utils/currency_utils.dart';
+import '../../../settings/provider/admin_view_provider.dart';
 import '../../provider/billing_history_provider.dart';
 
 class BillingHistorySummaryCard extends ConsumerWidget {
@@ -10,14 +11,55 @@ class BillingHistorySummaryCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final historyAsync = ref.watch(billingHistoryListProvider);
+    final historyAsync = ref.watch(filteredBillingHistoryListProvider);
+    final isAdminView = ref.watch(adminViewProvider);
 
     final bills = historyAsync.valueOrNull ?? [];
     final billCount = bills.length;
+
+    if (!isAdminView) {
+      return Container(
+        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: AppColors.border),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.03),
+              blurRadius: 6,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            Expanded(
+              child: _buildMetricItem(
+                icon: Icons.receipt_long_outlined,
+                iconBgColor: AppColors.primaryLight.withValues(alpha: 0.4),
+                iconColor: AppColors.primary,
+                label: 'TOTAL BILLS',
+                value: '$billCount ${billCount == 1 ? 'Bill' : 'Bills'}',
+                valueColor: AppColors.textPrimary,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
     final totalAmount = bills.fold<double>(
       0.0,
       (sum, b) => sum + b.totalAmount,
     );
+    final totalPurchaseCost = bills.fold<double>(
+      0.0,
+      (sum, b) => sum + b.totalPurchaseAmount,
+    );
+    final netProfit = totalAmount - totalPurchaseCost;
+    final isProfit = netProfit >= 0;
+
     final totalCashAmount = bills
         .where((b) => b.paymentType.toLowerCase() == 'cash')
         .fold<double>(0.0, (sum, b) => sum + b.totalAmount);
@@ -41,7 +83,7 @@ class BillingHistorySummaryCard extends ConsumerWidget {
       ),
       child: LayoutBuilder(
         builder: (context, constraints) {
-          final isCompact = constraints.maxWidth < 700;
+          final isCompact = constraints.maxWidth < 900;
 
           if (isCompact) {
             return Column(
@@ -51,10 +93,13 @@ class BillingHistorySummaryCard extends ConsumerWidget {
                     Expanded(
                       child: _buildMetricItem(
                         icon: Icons.receipt_long_outlined,
-                        iconBgColor: AppColors.primaryLight.withValues(alpha: 0.4),
+                        iconBgColor: AppColors.primaryLight.withValues(
+                          alpha: 0.4,
+                        ),
                         iconColor: AppColors.primary,
                         label: 'TOTAL BILLS',
-                        value: '$billCount ${billCount == 1 ? 'Bill' : 'Bills'}',
+                        value:
+                            '$billCount ${billCount == 1 ? 'Bill' : 'Bills'}',
                         valueColor: AppColors.textPrimary,
                       ),
                     ),
@@ -64,9 +109,41 @@ class BillingHistorySummaryCard extends ConsumerWidget {
                         icon: Icons.account_balance_wallet_outlined,
                         iconBgColor: Colors.blue.withValues(alpha: 0.12),
                         iconColor: Colors.blue.shade700,
-                        label: 'TOTAL AMOUNT',
+                        label: 'TOTAL SOLD',
                         value: CurrencyUtils.format(totalAmount),
                         valueColor: Colors.blue.shade800,
+                      ),
+                    ),
+                  ],
+                ),
+                const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 10),
+                  child: Divider(height: 1),
+                ),
+                Row(
+                  children: [
+                    Expanded(
+                      child: _buildMetricItem(
+                        icon: Icons.shopping_bag_outlined,
+                        iconBgColor: Colors.orange.withValues(alpha: 0.12),
+                        iconColor: Colors.orange.shade700,
+                        label: 'PURCHASE COST',
+                        value: CurrencyUtils.format(totalPurchaseCost),
+                        valueColor: Colors.orange.shade800,
+                      ),
+                    ),
+                    _buildVerticalDivider(),
+                    Expanded(
+                      child: _buildMetricItem(
+                        icon: isProfit ? Icons.trending_up : Icons.trending_down,
+                        iconBgColor: isProfit
+                            ? AppColors.successLight
+                            : AppColors.errorLight,
+                        iconColor: isProfit ? AppColors.success : AppColors.error,
+                        label: isProfit ? 'NET PROFIT' : 'NET LOSS',
+                        value:
+                            '${isProfit ? '+' : ''}${CurrencyUtils.format(netProfit)}',
+                        valueColor: isProfit ? AppColors.success : AppColors.error,
                       ),
                     ),
                   ],
@@ -104,57 +181,86 @@ class BillingHistorySummaryCard extends ConsumerWidget {
             );
           }
 
-          return Row(
+          return Column(
             children: [
-              // Total Bills
-              Expanded(
-                child: _buildMetricItem(
-                  icon: Icons.receipt_long_outlined,
-                  iconBgColor: AppColors.primaryLight.withValues(alpha: 0.4),
-                  iconColor: AppColors.primary,
-                  label: 'TOTAL BILLS',
-                  value: '$billCount ${billCount == 1 ? 'Bill' : 'Bills'}',
-                  valueColor: AppColors.textPrimary,
-                ),
+              Row(
+                children: [
+                  Expanded(
+                    child: _buildMetricItem(
+                      icon: Icons.receipt_long_outlined,
+                      iconBgColor: AppColors.primaryLight.withValues(alpha: 0.4),
+                      iconColor: AppColors.primary,
+                      label: 'TOTAL BILLS',
+                      value: '$billCount ${billCount == 1 ? 'Bill' : 'Bills'}',
+                      valueColor: AppColors.textPrimary,
+                    ),
+                  ),
+                  _buildVerticalDivider(),
+                  Expanded(
+                    child: _buildMetricItem(
+                      icon: Icons.account_balance_wallet_outlined,
+                      iconBgColor: Colors.blue.withValues(alpha: 0.12),
+                      iconColor: Colors.blue.shade700,
+                      label: 'TOTAL SOLD',
+                      value: CurrencyUtils.format(totalAmount),
+                      valueColor: Colors.blue.shade800,
+                    ),
+                  ),
+                  _buildVerticalDivider(),
+                  Expanded(
+                    child: _buildMetricItem(
+                      icon: Icons.shopping_bag_outlined,
+                      iconBgColor: Colors.orange.withValues(alpha: 0.12),
+                      iconColor: Colors.orange.shade700,
+                      label: 'PURCHASE COST',
+                      value: CurrencyUtils.format(totalPurchaseCost),
+                      valueColor: Colors.orange.shade800,
+                    ),
+                  ),
+                ],
               ),
-              _buildVerticalDivider(),
-
-              // Total Amount
-              Expanded(
-                child: _buildMetricItem(
-                  icon: Icons.account_balance_wallet_outlined,
-                  iconBgColor: Colors.blue.withValues(alpha: 0.12),
-                  iconColor: Colors.blue.shade700,
-                  label: 'TOTAL AMOUNT',
-                  value: CurrencyUtils.format(totalAmount),
-                  valueColor: Colors.blue.shade800,
-                ),
+              const Padding(
+                padding: EdgeInsets.symmetric(vertical: 10),
+                child: Divider(height: 1),
               ),
-              _buildVerticalDivider(),
-
-              // Total Cash
-              Expanded(
-                child: _buildMetricItem(
-                  icon: Icons.payments_outlined,
-                  iconBgColor: AppColors.successLight,
-                  iconColor: AppColors.success,
-                  label: 'TOTAL CASH',
-                  value: CurrencyUtils.format(totalCashAmount),
-                  valueColor: AppColors.success,
-                ),
-              ),
-              _buildVerticalDivider(),
-
-              // Total UPI
-              Expanded(
-                child: _buildMetricItem(
-                  icon: Icons.qr_code_2_outlined,
-                  iconBgColor: Colors.deepPurple.withValues(alpha: 0.12),
-                  iconColor: Colors.deepPurple.shade700,
-                  label: 'TOTAL UPI',
-                  value: CurrencyUtils.format(totalUpiAmount),
-                  valueColor: Colors.deepPurple.shade700,
-                ),
+              Row(
+                children: [
+                  Expanded(
+                    child: _buildMetricItem(
+                      icon: isProfit ? Icons.trending_up : Icons.trending_down,
+                      iconBgColor: isProfit
+                          ? AppColors.successLight
+                          : AppColors.errorLight,
+                      iconColor: isProfit ? AppColors.success : AppColors.error,
+                      label: isProfit ? 'NET PROFIT' : 'NET LOSS',
+                      value:
+                          '${isProfit ? '+' : ''}${CurrencyUtils.format(netProfit)}',
+                      valueColor: isProfit ? AppColors.success : AppColors.error,
+                    ),
+                  ),
+                  _buildVerticalDivider(),
+                  Expanded(
+                    child: _buildMetricItem(
+                      icon: Icons.payments_outlined,
+                      iconBgColor: AppColors.successLight,
+                      iconColor: AppColors.success,
+                      label: 'TOTAL CASH',
+                      value: CurrencyUtils.format(totalCashAmount),
+                      valueColor: AppColors.success,
+                    ),
+                  ),
+                  _buildVerticalDivider(),
+                  Expanded(
+                    child: _buildMetricItem(
+                      icon: Icons.qr_code_2_outlined,
+                      iconBgColor: Colors.deepPurple.withValues(alpha: 0.12),
+                      iconColor: Colors.deepPurple.shade700,
+                      label: 'TOTAL UPI',
+                      value: CurrencyUtils.format(totalUpiAmount),
+                      valueColor: Colors.deepPurple.shade700,
+                    ),
+                  ),
+                ],
               ),
             ],
           );
@@ -189,11 +295,7 @@ class BillingHistorySummaryCard extends ConsumerWidget {
             color: iconBgColor,
             borderRadius: BorderRadius.circular(10),
           ),
-          child: Icon(
-            icon,
-            color: iconColor,
-            size: 22,
-          ),
+          child: Icon(icon, color: iconColor, size: 22),
         ),
         const SizedBox(width: 12),
         Expanded(

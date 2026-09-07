@@ -13,8 +13,9 @@ class BillingListWidget extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final historyAsync = ref.watch(billingHistoryListProvider);
+    final historyAsync = ref.watch(filteredBillingHistoryListProvider);
     final filter = ref.watch(billingFilterProvider);
+    final searchQuery = ref.watch(billingSearchQueryProvider).trim();
 
     return historyAsync.when(
       loading: () => const LoadingWidget(message: 'Loading billing records...'),
@@ -35,6 +36,19 @@ class BillingListWidget extends ConsumerWidget {
       ),
       data: (bills) {
         if (bills.isEmpty) {
+          if (searchQuery.isNotEmpty) {
+            return EmptyState(
+              icon: Icons.search_off,
+              title: 'No invoices found',
+              subtitle:
+                  'No bills matched your search "$searchQuery". Try searching for a different vehicle number or customer name.',
+              actionLabel: 'Clear Search',
+              onAction: () {
+                ref.read(billingSearchQueryProvider.notifier).state = '';
+              },
+            );
+          }
+
           return EmptyState(
             icon: Icons.receipt_long_outlined,
             title: 'No invoices found',

@@ -1,19 +1,22 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/utils/currency_utils.dart';
 import '../../../../core/utils/date_utils.dart';
 import '../../../billing/model/bill_model.dart';
+import '../../../settings/provider/admin_view_provider.dart';
 import 'billing_details_dialog.dart';
 
-class BillingCard extends StatelessWidget {
+class BillingCard extends ConsumerWidget {
   final BillModel bill;
   final VoidCallback? onNavigateToBilling;
 
   const BillingCard({super.key, required this.bill, this.onNavigateToBilling});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final isAdminView = ref.watch(adminViewProvider);
     return Card(
       child: InkWell(
         borderRadius: BorderRadius.circular(12),
@@ -183,6 +186,34 @@ class BillingCard extends StatelessWidget {
                               ),
                             ),
                           ],
+                          if (isAdminView &&
+                              bill.purchaseShopName?.isNotEmpty == true) ...[
+                            if (bill.vehicleNumber?.isNotEmpty == true ||
+                                bill.jobCardNumber?.isNotEmpty == true)
+                              const Padding(
+                                padding: EdgeInsets.symmetric(horizontal: 6),
+                                child: Text(
+                                  '•',
+                                  style: TextStyle(
+                                    color: AppColors.textTertiary,
+                                    fontSize: 11,
+                                  ),
+                                ),
+                              ),
+                            const Icon(
+                              Icons.storefront_outlined,
+                              size: 13,
+                              color: AppColors.textTertiary,
+                            ),
+                            const SizedBox(width: 3),
+                            Text(
+                              bill.purchaseShopName!,
+                              style: AppTextStyles.bodySmall.copyWith(
+                                color: AppColors.textSecondary,
+                                fontSize: 11,
+                              ),
+                            ),
+                          ],
                         ],
                       ),
                     ],
@@ -213,7 +244,7 @@ class BillingCard extends StatelessWidget {
                 ),
               ),
 
-              // Total Amount
+              // Total Amount, Cost & Profit/Loss
               Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
@@ -224,7 +255,48 @@ class BillingCard extends StatelessWidget {
                       color: AppColors.primary,
                     ),
                   ),
-                  const SizedBox(height: 2),
+                  if (isAdminView &&
+                      (bill.totalPurchaseAmount > 0 ||
+                          bill.profitOrLoss != 0)) ...[
+                    const SizedBox(height: 2),
+                    Text(
+                      'Cost: ${CurrencyUtils.format(bill.totalPurchaseAmount)}',
+                      style: AppTextStyles.bodySmall.copyWith(
+                        fontSize: 11,
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                    const SizedBox(height: 3),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 6,
+                        vertical: 2,
+                      ),
+                      decoration: BoxDecoration(
+                        color: bill.isProfit
+                            ? AppColors.successLight
+                            : AppColors.errorLight,
+                        borderRadius: BorderRadius.circular(4),
+                        border: Border.all(
+                          color: bill.isProfit
+                              ? AppColors.success.withValues(alpha: 0.5)
+                              : AppColors.error.withValues(alpha: 0.5),
+                          width: 0.8,
+                        ),
+                      ),
+                      child: Text(
+                        '${bill.isProfit ? '+' : ''}${CurrencyUtils.format(bill.profitOrLoss)}',
+                        style: TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                          color: bill.isProfit
+                              ? AppColors.success
+                              : AppColors.error,
+                        ),
+                      ),
+                    ),
+                  ],
+                  const SizedBox(height: 4),
                   const Text(
                     'View details →',
                     style: TextStyle(

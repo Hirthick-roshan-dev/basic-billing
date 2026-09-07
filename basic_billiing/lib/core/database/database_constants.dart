@@ -2,7 +2,7 @@ class DatabaseConstants {
   DatabaseConstants._();
 
   static const String databaseName = 'billing_app.db';
-  static const int databaseVersion = 8;
+  static const int databaseVersion = 10;
 
   // Tables
   static const String tableProducts = 'products';
@@ -29,12 +29,15 @@ class DatabaseConstants {
   static const String colBillKm = 'km';
   static const String colBillJobCardNumber = 'job_card_no';
   static const String colBillPaymentType = 'payment_type';
+  static const String colBillPurchaseShopName = 'purchase_shop_name';
+  static const String colBillPurchasePaymentType = 'purchase_payment_type';
   static const String colBillSubtotal = 'subtotal';
   static const String colBillDiscountPercent = 'discount_percent';
   static const String colBillDiscountAmount = 'discount_amount';
   static const String colBillTaxPercent = 'tax_percent';
   static const String colBillTaxAmount = 'tax_amount';
   static const String colBillTotalAmount = 'total_amount';
+  static const String colBillTotalPurchaseAmount = 'total_purchase_amount';
   static const String colBillIsTotalEdited = 'is_total_edited';
   static const String colBillCreatedAt = 'created_at';
   static const String colBillUpdatedAt = 'updated_at';
@@ -44,6 +47,7 @@ class DatabaseConstants {
   static const String colBillItemBillId = 'bill_id';
   static const String colBillItemProductName = 'product_name';
   static const String colBillItemUnitPrice = 'unit_price';
+  static const String colBillItemPurchasePrice = 'purchase_price';
   static const String colBillItemQuantity = 'quantity';
   static const String colBillItemTotalPrice = 'total_price';
 

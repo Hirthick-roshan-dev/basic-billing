@@ -4,6 +4,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/widgets/loading_widget.dart';
 import '../provider/settings_provider.dart';
+import 'widgets/admin_view_toggle_card.dart';
 import 'widgets/business_information_form.dart';
 import 'widgets/tax_settings_form.dart';
 
@@ -35,7 +36,8 @@ class SettingsScreen extends ConsumerWidget {
                   const SizedBox(height: 20),
                   TaxSettingsForm(settings: settings),
                   const SizedBox(height: 20),
-                  // const InvoicePreviewCard(),
+                  const AdminViewToggleCard(),
+                  const SizedBox(height: 20),
                 ],
               ),
             ),

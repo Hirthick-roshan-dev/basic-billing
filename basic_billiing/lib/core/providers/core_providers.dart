@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import '../services/file_service.dart';
 import '../services/pdf_service.dart';
+import '../services/admin_pass_key_service.dart';
+import '../services/whatsapp_service.dart';
 import '../../features/billing/repo/product_repository.dart';
 import '../../features/billing/repo/billing_repository.dart';
 import '../../features/billing_history/repo/billing_history_repository.dart';
@@ -21,6 +23,14 @@ final fileServiceProvider = Provider<IFileService>((ref) {
 
 final pdfServiceProvider = Provider<IPdfService>((ref) {
   return PdfService();
+});
+
+final adminPassKeyServiceProvider = Provider<IAdminPassKeyService>((ref) {
+  return AdminPassKeyService();
+});
+
+final whatsappServiceProvider = Provider<IWhatsAppService>((ref) {
+  return WhatsAppService();
 });
 
 // Repositories Providers (Initialized synchronously with Database)
