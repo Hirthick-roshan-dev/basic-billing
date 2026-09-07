@@ -1,3 +1,4 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:basic_billiing/features/billing/model/cart_item_model.dart';
 import 'package:basic_billiing/features/billing/model/product_model.dart';
@@ -7,8 +8,16 @@ void main() {
   group('CartState Calculations Tests', () {
     test('calculates subtotal correctly from line items', () {
       final items = [
-        CartItemModel(productName: 'Milk', unitPrice: 30.0, quantity: 2), // 60.0
-        CartItemModel(productName: 'Bread', unitPrice: 50.0, quantity: 1), // 50.0
+        CartItemModel(
+          productName: 'Milk',
+          unitPrice: 30.0,
+          quantity: 2,
+        ), // 60.0
+        CartItemModel(
+          productName: 'Bread',
+          unitPrice: 50.0,
+          quantity: 1,
+        ), // 50.0
       ];
 
       final state = CartState(items: items);
@@ -21,10 +30,7 @@ void main() {
         CartItemModel(productName: 'Item 1', unitPrice: 100.0, quantity: 1),
       ];
 
-      final state = CartState(
-        items: items,
-        discountAmount: 10.0,
-      );
+      final state = CartState(items: items, discountAmount: 10.0);
 
       expect(state.subtotal, 100.0);
       expect(state.discountAmount, 10.0);
@@ -36,7 +42,11 @@ void main() {
     test('calculates tax correctly after discount', () {
       final items = [
         CartItemModel(productName: 'Milk', unitPrice: 30.0, quantity: 2), // 60
-        CartItemModel(productName: 'Bread', unitPrice: 50.0, quantity: 1), // 50 => subtotal 110
+        CartItemModel(
+          productName: 'Bread',
+          unitPrice: 50.0,
+          quantity: 1,
+        ), // 50 => subtotal 110
       ];
 
       final state = CartState(
@@ -87,46 +97,56 @@ void main() {
       expect(state.isTotalEdited, isTrue);
     });
 
-    test('updates unit price for cart item and recalculates subtotal and total', () {
-      final item = CartItemModel(productName: 'Engine Oil', unitPrice: 200.0, quantity: 2);
-      expect(item.totalPrice, 400.0);
+    test(
+      'updates unit price for cart item and recalculates subtotal and total',
+      () {
+        final item = CartItemModel(
+          productName: 'Engine Oil',
+          unitPrice: 200.0,
+          quantity: 2,
+        );
+        expect(item.totalPrice, 400.0);
 
-      final updatedItem = item.copyWith(unitPrice: 180.0);
-      expect(updatedItem.unitPrice, 180.0);
-      expect(updatedItem.totalPrice, 360.0);
+        final updatedItem = item.copyWith(unitPrice: 180.0);
+        expect(updatedItem.unitPrice, 180.0);
+        expect(updatedItem.totalPrice, 360.0);
 
-      final state = CartState(items: [updatedItem]);
-      expect(state.subtotal, 360.0);
-      expect(state.payableTotal, 360.0);
-    });
+        final state = CartState(items: [updatedItem]);
+        expect(state.subtotal, 360.0);
+        expect(state.payableTotal, 360.0);
+      },
+    );
 
-    test('supports vehicleNumber, vehicleModel, km, and jobCardNumber in CartState copyWith', () {
-      const state = CartState(
-        customerName: 'John',
-        customerPhone: '9876543210',
-        vehicleNumber: 'TN 38 AB 1234',
-        vehicleModel: 'Swift',
-        km: '45000',
-        jobCardNumber: 'JC-1024',
-      );
+    test(
+      'supports vehicleNumber, vehicleModel, km, and jobCardNumber in CartState copyWith',
+      () {
+        const state = CartState(
+          customerName: 'John',
+          customerPhone: '9876543210',
+          vehicleNumber: 'TN 38 AB 1234',
+          vehicleModel: 'Swift',
+          km: '45000',
+          jobCardNumber: 'JC-1024',
+        );
 
-      expect(state.customerName, 'John');
-      expect(state.customerPhone, '9876543210');
-      expect(state.vehicleNumber, 'TN 38 AB 1234');
-      expect(state.vehicleModel, 'Swift');
-      expect(state.km, '45000');
-      expect(state.jobCardNumber, 'JC-1024');
+        expect(state.customerName, 'John');
+        expect(state.customerPhone, '9876543210');
+        expect(state.vehicleNumber, 'TN 38 AB 1234');
+        expect(state.vehicleModel, 'Swift');
+        expect(state.km, '45000');
+        expect(state.jobCardNumber, 'JC-1024');
 
-      final updated = state.copyWith(
-        vehicleNumber: 'KL 07 CD 5678',
-        vehicleModel: 'Creta',
-        km: '50000',
-      );
-      expect(updated.vehicleNumber, 'KL 07 CD 5678');
-      expect(updated.vehicleModel, 'Creta');
-      expect(updated.km, '50000');
-      expect(updated.jobCardNumber, 'JC-1024');
-    });
+        final updated = state.copyWith(
+          vehicleNumber: 'KL 07 CD 5678',
+          vehicleModel: 'Creta',
+          km: '50000',
+        );
+        expect(updated.vehicleNumber, 'KL 07 CD 5678');
+        expect(updated.vehicleModel, 'Creta');
+        expect(updated.km, '50000');
+        expect(updated.jobCardNumber, 'JC-1024');
+      },
+    );
 
     test('supports paymentType in CartState defaults and copyWith', () {
       const defaultState = CartState();
@@ -139,32 +159,96 @@ void main() {
       expect(cashState.paymentType, 'Cash');
     });
 
-    test('addOfferToCart adds all items with 0.0 price and sets total to defined offer price', () {
-      final notifier = CartNotifier();
-      // Initialize with empty state
-      notifier.state = const CartState();
+    test(
+      'addOfferToCart adds all items with 0.0 price and sets total to defined offer price',
+      () {
+        final container = ProviderContainer();
+        addTearDown(container.dispose);
+        final notifier = container.read(cartProvider.notifier);
 
-      final offerProducts = [
-        ProductModel(id: 1, name: 'Engine Oil', price: 450.0, createdAt: DateTime.now()),
-        ProductModel(id: 2, name: 'Oil Filter', price: 150.0, createdAt: DateTime.now()),
-        ProductModel(id: 3, name: 'General Service', price: 500.0, createdAt: DateTime.now()),
+        final offerProducts = [
+          ProductModel(
+            id: 1,
+            name: 'Engine Oil',
+            price: 450.0,
+            createdAt: DateTime.now(),
+          ),
+          ProductModel(
+            id: 2,
+            name: 'Oil Filter',
+            price: 150.0,
+            createdAt: DateTime.now(),
+          ),
+          ProductModel(
+            id: 3,
+            name: 'General Service',
+            price: 500.0,
+            createdAt: DateTime.now(),
+          ),
+        ];
+
+        notifier.addOfferToCart(
+          products: offerProducts,
+          offerTotalPrice: 899.0,
+        );
+
+        final state = notifier.state;
+        expect(state.items.length, 3);
+        for (final item in state.items) {
+          expect(item.unitPrice, 0.0);
+          expect(item.totalPrice, 0.0);
+        }
+        expect(state.subtotal, 0.0);
+        expect(state.isTotalEdited, isTrue);
+        expect(state.manualTotal, 899.0);
+        expect(state.payableTotal, 899.0);
+      },
+    );
+
+    test('calculates totalPurchaseAmount correctly across cart items', () {
+      final items = [
+        CartItemModel(
+          productName: 'Engine Oil',
+          unitPrice: 450.0,
+          purchasePrice: 350.0,
+          quantity: 2,
+        ), // purchase total: 700.0
+        CartItemModel(
+          productName: 'Oil Filter',
+          unitPrice: 150.0,
+          purchasePrice: 80.0,
+          quantity: 1,
+        ), // purchase total: 80.0
       ];
 
-      notifier.addOfferToCart(
-        products: offerProducts,
-        offerTotalPrice: 899.0,
+      final state = CartState(items: items);
+      expect(state.totalPurchaseAmount, 780.0);
+      expect(items[0].totalPurchasePrice, 700.0);
+      expect(items[1].totalPurchasePrice, 80.0);
+    });
+
+    test('updateItemPurchasePrice and setAllPurchasePrices update cart state', () {
+      final container = ProviderContainer();
+      addTearDown(container.dispose);
+      final notifier = container.read(cartProvider.notifier);
+
+      notifier.addProduct(
+        ProductModel(id: 1, name: 'Tire', price: 2000.0, createdAt: DateTime.now()),
+      );
+      notifier.addProduct(
+        ProductModel(id: 2, name: 'Tube', price: 300.0, createdAt: DateTime.now()),
       );
 
-      final state = notifier.state;
-      expect(state.items.length, 3);
-      for (final item in state.items) {
-        expect(item.unitPrice, 0.0);
-        expect(item.totalPrice, 0.0);
-      }
-      expect(state.subtotal, 0.0);
-      expect(state.isTotalEdited, isTrue);
-      expect(state.manualTotal, 899.0);
-      expect(state.payableTotal, 899.0);
+      expect(notifier.state.totalPurchaseAmount, 0.0);
+
+      notifier.updateItemPurchasePrice('Tire', 1500.0);
+      expect(notifier.state.items[0].purchasePrice, 1500.0);
+      expect(notifier.state.totalPurchaseAmount, 1500.0);
+
+      notifier.setAllPurchasePrices({'Tire': 1600.0, 'Tube': 200.0});
+      expect(notifier.state.items[0].purchasePrice, 1600.0);
+      expect(notifier.state.items[1].purchasePrice, 200.0);
+      expect(notifier.state.totalPurchaseAmount, 1800.0);
     });
   });
 }
